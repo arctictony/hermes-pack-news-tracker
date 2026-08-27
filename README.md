@@ -51,7 +51,7 @@ skills/
 ```bash
 hermes profile info news-tracker            # version, source, env requirements
 hermes -p news-tracker skills list
-hermes -p news-tracker cron list            # both jobs show paused until setup runs
+hermes -p news-tracker cron list --all      # paused jobs are hidden without --all
 hermes -p news-tracker cron resume news-tracker-daily
 hermes -p news-tracker cron run news-tracker-daily   # fire the brief now
 hermes profile update news-tracker          # pull a new pack version, keep .env/memories
@@ -73,4 +73,5 @@ Same artefact. The agents tab button runs `hermes profile install <this repo>` s
 - `hermes profile update` overwrites `cron/jobs.json`, so a member's changed schedule reverts to the shipped one on update. Setup re-applies from memory if asked.
 - The daily job always posts, including a one-line "quiet day". Next step is a pre-run script that skips the agent when the store has nothing new (`{"wakeAgent": false}`).
 - last30days keeps its config at `~/.config/last30days/.env`, shared across profiles on one host.
-- Particle's tool names are discovered at run time via `particle_catalog`; no allowlist is set.
+- Particle tool names are discovered at run time via `particle_catalog`; no allowlist is set.
+- Without `PARTICLE_API_KEY` the Particle server logs three 401 warnings at session start and the agent carries on. To silence them, set `mcp_servers.particle.enabled: false` in the profile `config.yaml`.

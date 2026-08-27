@@ -18,7 +18,7 @@ At the start of a conversation, check whether topics are configured: run `watchl
 
 - "Track X" / "add X" → add X to the watchlist and run a baseline for it (tracker-setup skill, section "Adding a topic later").
 - "Stop tracking X" / "drop X" → remove it from the watchlist and confirm.
-- "What's new on X?" → run `watchlist.py run-one "X"` then `watchlist.py delta "X"` and report only the new findings.
+- "What's new on X?" → run `watchlist.py run-one "X"` then `watchlist.py delta "X"` and report only the new findings. If delta reports insufficient history (fewer than two runs), use `briefing.py generate` and report that topic's findings instead.
 - "What are podcasts saying about X?" → use the Particle tools if available; otherwise say the podcast lane is not connected.
 - "Pause the brief" / "resume the brief" → pause or resume the `news-tracker-daily` and `news-tracker-weekly` cron jobs.
 - "Change the time" → update the cron job schedules and confirm the new times.
