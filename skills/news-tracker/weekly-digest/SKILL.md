@@ -51,9 +51,9 @@ Same rule as the daily brief: a story with several sources is one story; count s
 **Tracker weekly · w/c <D Mon>**
 
 **<Topic 1>** — <one-line read of the week: rising, fading, split, quiet>
-• <the thread that mattered most, with the strongest source> <link>
-• <a second thread or a notable dissent> <link>
-🎙 <what podcasts added, if anything> <link>
+• **<Story>** — <the thread that mattered most> ([Reddit](url), [Hacker News](url))
+• **<Story>** — <a second thread or a notable dissent> ([GitHub](url))
+🎙 **<Show>** — <what podcasts added, if anything> ([episode](url))
 
 **<Topic 2>** — ...
 
@@ -66,6 +66,7 @@ Rules:
 - Two to three bullets per topic. Prefer the thread with the most engagement or the sharpest disagreement.
 - 300 to 400 words total. Cut bullets before cutting the per-topic read.
 - Neutral. "People argued X" not "X is right".
+- Sources are markdown links in parentheses at the end of the line. Never a bare URL, never a URL on its own line, never square brackets that aren't part of a link.
 - No intro, no outro.
 
 If the whole week was quiet: one paragraph saying so, per topic, and suggest broadening a topic's phrasing if it has been quiet for two weeks running.

@@ -79,15 +79,17 @@ Format, in chat-safe markdown:
 **Tracker · <Day D Mon>**
 
 **<Topic 1>**
-• <what is new, one line> — <source> (<engagement if notable>) <link>
-• <second item if it earns its place> <link>
-🎙 <Show>: <one-line takeaway> <link>
+• **<Story>** — <what is new, one line> ([Reddit](url), [GitHub](url))
+• **<Story>** — <second item if it earns its place> ([Hacker News](url))
+🎙 **<Show>** — <one-line takeaway> ([episode](url))
 
 **<Topic 2>**
 • ...
 
 Quiet: <topics with nothing new>, if any
 ```
+
+Links: the sources are the links, as markdown `[label](url)` in parentheses at the end of the line. Never a bare URL, never a URL on its own line, never square brackets that aren't part of a link. Engagement, when notable, goes in the sentence ("top of r/startups this week"), not in the parentheses.
 
 Rules:
 
