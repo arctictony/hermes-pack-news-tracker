@@ -186,9 +186,24 @@ PYEOF
 
   onboarding)
     action="${1:-status}"; task="${2:-}"; days="${3:-3}"
-    "$PY" - "$PROFILE/news-tracker.onboarding.json" "$action" "$task" "$days" <<'PYEOF'
+    # Reality checks, so the checklist can never contradict what is actually configured
+    # (state file is new in 0.4.0; agents set up before it must not be asked again).
+    has_topic=0; "$PY" "$L30D/watchlist.py" list 2>/dev/null | grep -q '"enabled": 1' && has_topic=1
+    routines_on=0; jobs="$PROFILE/cron/jobs.json"
+    if [ -f "$jobs" ]; then
+      "$PY" - "$jobs" <<'PYEOF' && routines_on=1
+import json, sys
+d = json.load(open(sys.argv[1])); jobs = d.get("jobs", d) if isinstance(d, dict) else d
+ok = any(j.get("id") == "news-tracker-daily" and j.get("enabled") for j in jobs)
+sys.exit(0 if ok else 1)
+PYEOF
+    fi
+    has_particle=0; [ -n "$(read_key)" ] && has_particle=1
+    has_x=0; { [ -n "${XAI_API_KEY:-}" ] || grep -qs '^XAI_API_KEY=' "$HOME/.config/last30days/.env"; } && has_x=1
+    "$PY" - "$PROFILE/news-tracker.onboarding.json" "$action" "$task" "$days" "$has_topic" "$routines_on" "$has_particle" "$has_x" <<'PYEOF'
 import sys, json, os, datetime
 path, action, task, days = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
+reality = dict(zip(["first_topic", "routines_on", "podcasts", "x_coverage"], [a == "1" for a in sys.argv[5:9]]))
 TASKS = [
   ("first_topic",  "One topic confirmed after showing five results"),
   ("routines_on",  "Daily brief and weekly digest switched on, schedule stated"),
@@ -204,6 +219,10 @@ if os.path.exists(path):
 tasks = state.setdefault("tasks", {})
 for key, _ in TASKS:
     tasks.setdefault(key, {"status": "pending"})
+# Reality wins: anything already configured is done, whatever the file says.
+for key, done in reality.items():
+    if done and tasks[key]["status"] != "done":
+        tasks[key] = {"status": "done", "at": now.isoformat(), "detected": True}
 def save():
     tmp = path + ".tmp"; json.dump(state, open(tmp, "w"), indent=1); os.replace(tmp, path)
 if action in ("done", "skip", "later"):
@@ -212,7 +231,8 @@ if action in ("done", "skip", "later"):
     if action == "done": t.update(status="done", at=now.isoformat())
     elif action == "skip": t.update(status="declined", at=now.isoformat())
     else: t.update(status="later", until=(now + datetime.timedelta(days=days)).isoformat(), at=now.isoformat())
-    state["last_touch"] = now.isoformat(); save()
+    state["last_touch"] = now.isoformat()
+save()
 def is_due(t):
     if t["status"] == "pending": return True
     if t["status"] == "later":
