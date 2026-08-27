@@ -23,7 +23,9 @@ L30D="${HERMES_HOME:-$HOME/.hermes}/skills/research/last30days/scripts"
 PY="$(command -v python3.14 || command -v python3.13 || command -v python3.12 || command -v python3)"
 ```
 
-If `$L30D/watchlist.py` does not exist, say so and stop: the pack is not installed correctly.
+Copy these two lines exactly. `HERMES_HOME` already points at this agent's own profile directory, so do not append a profile path. If `$L30D/watchlist.py` is missing, locate it with `find "$HOME/.hermes" -path "*/skills/research/last30days/scripts/watchlist.py" | head -1` and set `L30D` to its directory.
+
+If it is still missing, say so and stop: the pack is not installed correctly.
 
 ## Step 0: current state
 

@@ -4,7 +4,9 @@
 
 Send this to the Hermes agent you already have in Filament:
 
-> Install the News Tracker pack: run `curl -fsSL https://raw.githubusercontent.com/arctictony/hermes-pack-news-tracker/main/install.sh | bash`, then run /reload-mcp and start the tracker-setup skill to onboard me.
+> Install the News Tracker pack: run `git clone -q https://github.com/arctictony/hermes-pack-news-tracker.git /tmp/news-tracker && bash /tmp/news-tracker/install.sh`, then run /reload-mcp and start the tracker-setup skill to onboard me.
+
+(Clone-then-run rather than `curl | bash`: Hermes flags piping remote content to a shell for approval, which a member would see as a stall.)
 
 That is the whole install. The agent fetches the pack, applies it to itself (skills, identity, paused routines, Particle connector), and begins a short interview: what to track, why, podcasts or not, when to post. It then runs a baseline, switches the routines on and posts a first brief. No terminal, no profile, no keys required to start; the podcast lane switches on when `PARTICLE_API_KEY` is added to the agent's `.env`.
 

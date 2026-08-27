@@ -21,6 +21,8 @@ L30D="${HERMES_HOME:-$HOME/.hermes}/skills/research/last30days/scripts"
 PY="$(command -v python3.14 || command -v python3.13 || command -v python3.12 || command -v python3)"
 ```
 
+Copy these two lines exactly. `HERMES_HOME` already points at this agent's own profile directory, so do not append a profile path. If `$L30D/watchlist.py` is missing, locate it with `find "$HOME/.hermes" -path "*/skills/research/last30days/scripts/watchlist.py" | head -1` and set `L30D` to its directory.
+
 ## 1. Refresh every tracked topic
 
 ```bash
