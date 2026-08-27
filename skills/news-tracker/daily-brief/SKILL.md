@@ -50,7 +50,7 @@ If it reports nothing new for any topic, skip to step 4 with the quiet-day forma
 
 ## 2b. X lane (only if Composio tools are present and X is connected)
 
-Composio tools have names containing `COMPOSIO` (catalog search, connections manager, executor). If they exist and the connections manager shows a `twitter` connection, run this per enabled topic; otherwise skip the lane silently.
+Composio arrives as an MCP server with a host-specific prefix; look for `COMPOSIO_MANAGE_CONNECTIONS` / `COMPOSIO_MULTI_EXECUTE_TOOL` or direct `TWITTER_*` tools. If they exist and the connections manager shows a `twitter` connection, run this per enabled topic; otherwise skip the lane silently. Never start a connection from a scheduled run.
 
 1. Execute `TWITTER_RECENT_SEARCH` once per topic: `query` = the topic name plus its retune queries joined with OR, with `-is:retweet lang:en`; `max_results: 50`; `sort_order: "relevancy"`; `start_time` = 24 hours ago (UTC, `YYYY-MM-DDTHH:mm:ssZ`); `tweet_fields: ["public_metrics","created_at","author_id"]`; `expansions: ["author_id"]`. **One call per topic, never paginate.** Every post read costs money.
 2. If the member follows or owns X lists (`TWITTER_GET_USER_FOLLOWED_LISTS`, `TWITTER_GET_USER_OWNED_LISTS`), pull each list's timeline once (`TWITTER_LIST_POSTS_TIMELINE_BY_LIST_ID`, `max_results: 50`) and keep only posts that mention a tracked topic. Tag those `source: "x-list"`; they earn a "from people you follow" clause in the brief.

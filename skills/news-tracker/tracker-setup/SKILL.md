@@ -129,12 +129,13 @@ At a pause, and only if the Particle tools are not already working (no `mcp_part
 
 At a later pause (never in the same breath as Task 3). Two routes; pick by what tools you have.
 
-**Route A, Composio (Filament agents have this).** If you have Composio tools (names containing `COMPOSIO`: a catalog search, a connections manager, an executor), X is a consent click, not a key:
+**Route A, Composio (Filament agents have this).** Composio arrives as an MCP server; the prefix varies by host, so look for tools whose names contain `COMPOSIO_MANAGE_CONNECTIONS`, `COMPOSIO_SEARCH_TOOLS`, `COMPOSIO_MULTI_EXECUTE_TOOL`, or direct toolkit tools such as `TWITTER_RECENT_SEARCH`. If any exist, X is a consent click, not a key:
 
 > Do you want X (Twitter) in the mix? Right now I cover Reddit, Hacker News, YouTube and the web. Connecting your X account takes one click and lets me include what people, and the accounts you follow, are saying. Want to connect it, or leave X out?
 
 - "Leave it" → `onboarding skip x_coverage`. "Later" → `onboarding later x_coverage 7`.
-- "Yes" → use the Composio connections tool to start a connection for the `twitter` toolkit. It returns a link. Post the link with one line: "Open this, approve, and tell me when you're done." When they say done, verify with one tiny call: execute `TWITTER_RECENT_SEARCH` with `query: "<their first topic>"`, `max_results: 10`. Success → "X is in. It'll show up from the next brief." `onboarding done x_coverage`; memory: "X: on (Composio)". Failure → "The connection didn't complete. Want to try the link again?" Once more, then `later`.
+- "Yes" → use `COMPOSIO_MANAGE_CONNECTIONS` (or the host's equivalent connections tool) to start a connection for the `twitter` toolkit. It returns a link. Post the link with one line: "Open this, approve, and tell me when you're done." When they say done, verify with one tiny call: `TWITTER_RECENT_SEARCH` with `query: "<their first topic>"`, `max_results: 10` (directly, or via `COMPOSIO_MULTI_EXECUTE_TOOL`). Success → "X is in. It'll show up from the next brief." `onboarding done x_coverage`; memory: "X: on (Composio)". Failure → "The connection didn't complete. Want to try the link again?" Once more, then `later`.
+- If the connect attempt is refused with an error about custom credentials or a 422, X is not enabled on this host yet. Say: "X isn't switched on for this workspace yet; I'll ask again when it is." Then `onboarding later x_coverage 14`. Do not offer the xAI route on a Composio host.
 
 Never paste the link into a shared room; do this in a private conversation.
 
