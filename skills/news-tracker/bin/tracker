@@ -13,6 +13,10 @@
 #   bash "$TRACKER" history "<words>" [limit]                   # everything ever stored that matches: first seen, times seen, dismissed?
 #   bash "$TRACKER" set-key <particle_api_key>                  # store the Particle key in this profile's .env
 #   bash "$TRACKER" check-key                                   # verify the stored Particle key against the API
+#   bash "$TRACKER" set-x-key <xai_api_key>                     # store an xAI key for X/Twitter coverage (engine config)
+#   bash "$TRACKER" check-x-key                                 # verify the stored xAI key
+#   bash "$TRACKER" onboarding status|next                      # the onboarding checklist and what to pick up next
+#   bash "$TRACKER" onboarding done|skip|later <task> [days]    # mark a task done, declined, or snoozed
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROFILE="$(cd "$HERE/../../.." && pwd)"          # <profile>/skills/news-tracker/bin -> <profile>
@@ -150,6 +154,86 @@ PYEOF
     )
     ;;
 
+  set-x-key)
+    key="${1:-}"
+    case "$key" in
+      xai-*) ;;
+      "") echo "usage: tracker set-x-key <xai_api_key>"; exit 2 ;;
+      *) echo "that does not look like an xAI key (they start with xai-); nothing saved"; exit 2 ;;
+    esac
+    # The research engine reads its own config file, not Hermes's .env.
+    cfg_dir="$HOME/.config/last30days"; cfg="$cfg_dir/.env"
+    mkdir -p "$cfg_dir"; touch "$cfg"
+    tmp="$(mktemp "$cfg_dir/.env.XXXXXX")"
+    grep -v '^XAI_API_KEY=' "$cfg" > "$tmp" || true
+    printf 'XAI_API_KEY=%s\n' "$key" >> "$tmp"
+    mv "$tmp" "$cfg"; chmod 600 "$cfg"
+    echo "saved: XAI_API_KEY written to the research engine config (ends ...${key: -4})"
+    ;;
+
+  check-x-key)
+    key="${XAI_API_KEY:-}"
+    [ -n "$key" ] || key="$(sed -n 's/^XAI_API_KEY=//p' "$HOME/.config/last30days/.env" 2>/dev/null | tail -1 | tr -d '"'"'"' ')"
+    [ -n "$key" ] || { echo "no key: XAI_API_KEY is not set"; exit 3; }
+    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "Authorization: Bearer $key" 'https://api.x.ai/v1/models' || echo 000)"
+    case "$code" in
+      200) echo "ok: xAI key works (HTTP 200)" ;;
+      400|401|403) echo "invalid: xAI rejected the key (HTTP $code). Check it was copied in full."; exit 4 ;;
+      000) echo "unreachable: could not reach api.x.ai (network?)"; exit 5 ;;
+      *) echo "unexpected: HTTP $code from xAI"; exit 6 ;;
+    esac
+    ;;
+
+  onboarding)
+    action="${1:-status}"; task="${2:-}"; days="${3:-3}"
+    "$PY" - "$PROFILE/news-tracker.onboarding.json" "$action" "$task" "$days" <<'PYEOF'
+import sys, json, os, datetime
+path, action, task, days = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
+TASKS = [
+  ("first_topic",  "One topic confirmed after showing five results"),
+  ("routines_on",  "Daily brief and weekly digest switched on, schedule stated"),
+  ("podcasts",     "Podcast lane: Particle key connected, or declined"),
+  ("x_coverage",   "X/Twitter coverage: xAI key connected, or declined"),
+  ("room_ready",   "Told how to add it to a room and what it will post there"),
+]
+now = datetime.datetime.now(datetime.timezone.utc)
+state = {}
+if os.path.exists(path):
+    try: state = json.load(open(path))
+    except Exception: state = {}
+tasks = state.setdefault("tasks", {})
+for key, _ in TASKS:
+    tasks.setdefault(key, {"status": "pending"})
+def save():
+    tmp = path + ".tmp"; json.dump(state, open(tmp, "w"), indent=1); os.replace(tmp, path)
+if action in ("done", "skip", "later"):
+    if task not in tasks: print(json.dumps({"error": f"unknown task {task}", "tasks": [k for k,_ in TASKS]})); sys.exit(2)
+    t = tasks[task]
+    if action == "done": t.update(status="done", at=now.isoformat())
+    elif action == "skip": t.update(status="declined", at=now.isoformat())
+    else: t.update(status="later", until=(now + datetime.timedelta(days=days)).isoformat(), at=now.isoformat())
+    state["last_touch"] = now.isoformat(); save()
+def is_due(t):
+    if t["status"] == "pending": return True
+    if t["status"] == "later":
+        try: return datetime.datetime.fromisoformat(t["until"]) <= now
+        except Exception: return True
+    return False
+pending = [k for k, _ in TASKS if is_due(tasks[k])]
+nxt = pending[0] if pending else None
+out = {
+  "tasks": [{"task": k, "what": w, **tasks[k]} for k, w in TASKS],
+  "next": nxt,
+  "next_what": dict(TASKS).get(nxt) if nxt else None,
+  "all_done": not any(is_due(tasks[k]) or tasks[k]["status"] == "later" for k, _ in TASKS),
+}
+if action == "next":
+    print(json.dumps({"next": nxt, "what": out["next_what"], "all_done": out["all_done"]}))
+else:
+    print(json.dumps(out, indent=1))
+PYEOF
+    ;;
+
   set-key)
     key="${1:-}"
     case "$key" in
@@ -178,5 +262,5 @@ PYEOF
     esac
     ;;
 
-  *) echo "usage: tracker watchlist|briefing|research|track|drop|retune|dismiss|history|set-key|check-key ..."; exit 2 ;;
+  *) echo "usage: tracker watchlist|briefing|research|track|drop|retune|dismiss|history|set-key|check-key|set-x-key|check-x-key|onboarding ..."; exit 2 ;;
 esac

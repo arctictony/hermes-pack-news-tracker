@@ -12,6 +12,10 @@ That is the whole install. The agent fetches the pack, applies it to itself (ski
 
 Later: "track X", "drop X", "pause the brief", "change the time", "connect podcasts" all work in chat. Every reply to a brief ("less of that", "more on the funding side") is treated as calibration and applied. Invite the agent to a room and its scheduled posts go to its home room.
 
+## Keys, for non-technical users
+
+X coverage works the same way as Particle below, one step per message: console.x.ai, create a key (`xai-…`), paste it, the agent stores it in the research engine's own config with `tracker set-x-key` and verifies it against the xAI API. Offered as a later task, never in the same breath as Particle, and clearly labelled as billed on usage.
+
 ## The Particle key, for non-technical users
 
 The pack never ships a key (the repo is public; each agent needs its own). Instead `tracker-setup` walks the person through getting one, one step per message, only after they have seen a first brief and only in a private conversation:
@@ -23,7 +27,7 @@ The pack never ships a key (the repo is public; each agent needs its own). Inste
 
 ## What the pack gives an agent
 
-- **Onboarding** — `tracker-setup`: one question, a first brief, react-to-calibrate, defaults stated, routines on, Particle key walk-through as an optional last step
+- **Onboarding** — `tracker-setup`: a five-task checklist with state (`tracker onboarding`), worked through at conversational pauses: first topic (show five, react), routines on (immediately), podcasts (Particle key walk-through), X coverage (xAI key walk-through), room-ready. Tasks can be done, declined or snoozed; the agent picks up the next one whenever a conversation reaches a natural end
 - **Skill** — `last30days` (vendored, v3.8.3): research across Reddit, HN, YouTube, X, Polymarket, Digg and the web, with a SQLite store so "new since last time" is real
 - **Connector** — Particle.pro MCP (`https://mcp.particle.pro`) for the podcast lane
 - **Routines** — `news-tracker-daily` (Tue–Fri 08:00) and `news-tracker-weekly` (Mon 08:00), delivered to the agent's Filament home room. Shipped paused; setup enables them
@@ -101,6 +105,6 @@ Same artefact. The agents tab button runs `hermes profile install <this repo>` s
 - "Drop X" is forward-looking: `tracker drop` disables the topic and keeps its findings and dismissals; `tracker track X` resumes with history intact. The engine's own `watchlist remove` deletes history and the skills never call it.
 - The daily job always posts, including a one-line "quiet day". Next step is a pre-run script that skips the agent when the store has nothing new (`{"wakeAgent": false}`).
 - last30days keeps its config at `~/.config/last30days/.env`, shared across profiles on one host.
-- Skills never call Python directly or redirect into `.env`. They go through `skills/news-tracker/bin/tracker` (`watchlist`, `briefing`, `track`, `drop`, `retune`, `dismiss`, `history`, `set-key`, `check-key`), because Hermes's command scanner (tirith) blocks a dynamically selected interpreter (`$PY script.py`) and shell redirection into env files; in cron sessions those blocks are silent.
+- Skills never call Python directly or redirect into `.env`. They go through `skills/news-tracker/bin/tracker` (`watchlist`, `briefing`, `track`, `drop`, `retune`, `dismiss`, `history`, `set-key`, `check-key`, `set-x-key`, `check-x-key`, `onboarding`), because Hermes's command scanner (tirith) blocks a dynamically selected interpreter (`$PY script.py`) and shell redirection into env files; in cron sessions those blocks are silent.
 - Particle tool names are discovered at run time via `particle_catalog`; no allowlist is set.
 - Without `PARTICLE_API_KEY` the Particle server logs three 401 warnings at session start and the agent carries on. To silence them, set `mcp_servers.particle.enabled: false` in the profile `config.yaml`.
