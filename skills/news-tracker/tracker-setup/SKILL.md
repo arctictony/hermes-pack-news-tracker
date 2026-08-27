@@ -189,6 +189,20 @@ bash "$TRACKER" drop "<topic>"
 
 Forward-looking: stops researching and posting it, keeps everything learned so "track X" resumes with history intact and the story lookups still know it. Never use `watchlist remove`; that deletes history. One-line confirmation, memory update.
 
+## Starting over
+
+Only when the person explicitly asks to start again or reset. Confirm once, one question:
+
+> That wipes what I'm tracking, what I've learned about it, and the checklist. The brief stops until we set up again. Say "yes, reset" to go ahead.
+
+On "yes, reset" (and only then):
+
+```bash
+bash "$TRACKER" reset
+```
+
+Add `--keys` only if they also said to forget the Particle or X keys. Then delete your own memory notes about the tracker (anything starting "News tracker configured", topic notes, "Podcasts: on/off", "X: on/off") with the memory tool, and reply with exactly one line: "Done. Send /new and we'll start fresh." Do not begin onboarding in the same conversation; the fresh session does that.
+
 ## Notes
 
 - If the wrapper reports a Python version problem, the host needs Python 3.12 or newer on PATH. Say so plainly and stop.

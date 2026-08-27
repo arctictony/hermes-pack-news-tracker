@@ -17,6 +17,7 @@
 #   bash "$TRACKER" check-x-key                                 # verify the stored xAI key
 #   bash "$TRACKER" onboarding status|next                      # the onboarding checklist and what to pick up next
 #   bash "$TRACKER" onboarding done|skip|later <task> [days]    # mark a task done, declined, or snoozed
+#   bash "$TRACKER" reset [--keys]                              # back to day zero: topics, findings, checklist gone, routines paused; --keys also forgets Particle/xAI keys
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROFILE="$(cd "$HERE/../../.." && pwd)"          # <profile>/skills/news-tracker/bin -> <profile>
@@ -254,6 +255,47 @@ else:
 PYEOF
     ;;
 
+  reset)
+    with_keys=0; [ "${1:-}" = "--keys" ] && with_keys=1
+    ( cd "$L30D" && "$PY" - <<'PYEOF'
+import json, store
+names = [t["name"] for t in store.list_topics()]
+for n in names:
+    store.remove_topic(n)
+print(json.dumps({"topics_removed": names}))
+PYEOF
+    )
+    rm -f "$PROFILE/news-tracker.onboarding.json"
+    jobs="$PROFILE/cron/jobs.json"
+    if [ -f "$jobs" ]; then
+      "$PY" - "$jobs" <<'PYEOF'
+import json, sys, os, tempfile
+p = sys.argv[1]; d = json.load(open(p)); jobs = d.get("jobs", []) if isinstance(d, dict) else d
+n = 0
+for j in jobs:
+    if str(j.get("id", "")).startswith("news-tracker-"):
+        j["enabled"] = False; j["state"] = "paused"; j["next_run_at"] = None
+        j["paused_reason"] = "reset by tracker reset; setup re-enables"
+        n += 1
+fd, tmp = tempfile.mkstemp(dir=os.path.dirname(p), prefix=".jobs.", suffix=".json")
+with os.fdopen(fd, "w") as f: json.dump(d if isinstance(d, dict) else {"jobs": jobs}, f, indent=2)
+os.replace(tmp, p)
+print(json.dumps({"routines_paused": n}))
+PYEOF
+    fi
+    if [ "$with_keys" = 1 ]; then
+      if [ -f "$ENV_FILE" ]; then
+        tmp="$(mktemp "$PROFILE/.env.XXXXXX")"; grep -v '^PARTICLE_API_KEY=' "$ENV_FILE" > "$tmp" || true; mv "$tmp" "$ENV_FILE"; chmod 600 "$ENV_FILE"
+      fi
+      cfg="$HOME/.config/last30days/.env"
+      if [ -f "$cfg" ]; then
+        tmp="$(mktemp "$HOME/.config/last30days/.env.XXXXXX")"; grep -v '^XAI_API_KEY=' "$cfg" > "$tmp" || true; mv "$tmp" "$cfg"; chmod 600 "$cfg"
+      fi
+      echo '{"keys_removed": ["PARTICLE_API_KEY", "XAI_API_KEY"]}'
+    fi
+    echo "reset complete: the tracker is back to day zero. Start a fresh conversation (/new) to run onboarding again."
+    ;;
+
   set-key)
     key="${1:-}"
     case "$key" in
@@ -282,5 +324,5 @@ PYEOF
     esac
     ;;
 
-  *) echo "usage: tracker watchlist|briefing|research|track|drop|retune|dismiss|history|set-key|check-key|set-x-key|check-x-key|onboarding ..."; exit 2 ;;
+  *) echo "usage: tracker watchlist|briefing|research|track|drop|retune|dismiss|history|set-key|check-key|set-x-key|check-x-key|onboarding|reset ..."; exit 2 ;;
 esac
