@@ -16,18 +16,19 @@ The Monday routine. Where the daily brief says what is new, the digest says what
 
 ## Paths
 
+Every shell step goes through one fixed entry point. Set this variable first in each terminal call and call it exactly like this (do not substitute a Python interpreter yourself; the wrapper picks one):
+
 ```bash
-L30D="${HERMES_HOME:-$HOME/.hermes}/skills/research/last30days/scripts"
-PY="$(command -v python3.14 || command -v python3.13 || command -v python3.12 || command -v python3)"
+TRACKER="${HERMES_HOME:-$HOME/.hermes}/skills/news-tracker/bin/tracker"
 ```
 
-Copy these two lines exactly. `HERMES_HOME` already points at this agent's own profile directory, so do not append a profile path. If `$L30D/watchlist.py` is missing, locate it with `find "$HOME/.hermes" -path "*/skills/research/last30days/scripts/watchlist.py" | head -1` and set `L30D` to its directory.
+`HERMES_HOME` already points at this agent's own profile directory, so do not append a profile path. If `$TRACKER` is missing, locate it with `find "$HOME/.hermes" -path "*/skills/news-tracker/bin/tracker" | head -1`.
 
 ## 1. Refresh and pull the week
 
 ```bash
-$PY "$L30D/watchlist.py" run-all
-$PY "$L30D/briefing.py" generate --weekly
+bash "$TRACKER" watchlist run-all
+bash "$TRACKER" briefing generate --weekly
 ```
 
 The weekly mode returns the last seven days of findings per topic with engagement, so you can see which threads grew and which died.

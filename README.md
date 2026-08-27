@@ -90,5 +90,6 @@ Same artefact. The agents tab button runs `hermes profile install <this repo>` s
 - `hermes profile update` overwrites `cron/jobs.json`, so a member's changed schedule reverts to the shipped one on update. Setup re-applies from memory if asked.
 - The daily job always posts, including a one-line "quiet day". Next step is a pre-run script that skips the agent when the store has nothing new (`{"wakeAgent": false}`).
 - last30days keeps its config at `~/.config/last30days/.env`, shared across profiles on one host.
+- Skills never call Python directly. They go through `skills/news-tracker/bin/tracker`, because Hermes's command scanner (tirith) blocks a dynamically selected interpreter (`$PY script.py`), and in cron sessions that block is silent.
 - Particle tool names are discovered at run time via `particle_catalog`; no allowlist is set.
 - Without `PARTICLE_API_KEY` the Particle server logs three 401 warnings at session start and the agent carries on. To silence them, set `mcp_servers.particle.enabled: false` in the profile `config.yaml`.

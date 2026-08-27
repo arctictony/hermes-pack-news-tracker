@@ -16,21 +16,18 @@ Natural-language onboarding for the news tracker. Runs on first contact, and aga
 
 ## Paths
 
-Every shell step uses these two variables. Set them first in each terminal call.
+Every shell step goes through one fixed entry point. Set this variable first in each terminal call and call it exactly like this (do not substitute a Python interpreter yourself; the wrapper picks one):
 
 ```bash
-L30D="${HERMES_HOME:-$HOME/.hermes}/skills/research/last30days/scripts"
-PY="$(command -v python3.14 || command -v python3.13 || command -v python3.12 || command -v python3)"
+TRACKER="${HERMES_HOME:-$HOME/.hermes}/skills/news-tracker/bin/tracker"
 ```
 
-Copy these two lines exactly. `HERMES_HOME` already points at this agent's own profile directory, so do not append a profile path. If `$L30D/watchlist.py` is missing, locate it with `find "$HOME/.hermes" -path "*/skills/research/last30days/scripts/watchlist.py" | head -1` and set `L30D` to its directory.
-
-If it is still missing, say so and stop: the pack is not installed correctly.
+`HERMES_HOME` already points at this agent's own profile directory, so do not append a profile path. If `$TRACKER` is missing, locate it with `find "$HOME/.hermes" -path "*/skills/news-tracker/bin/tracker" | head -1`.
 
 ## Step 0: current state
 
 ```bash
-$PY "$L30D/watchlist.py" list
+bash "$TRACKER" watchlist list
 ```
 
 - No topics → this is a first run. Continue to Step 1.
@@ -62,7 +59,7 @@ Ask for a yes. Adjust if not. Do not proceed without a yes.
 For each topic:
 
 ```bash
-$PY "$L30D/watchlist.py" add "<topic>"
+bash "$TRACKER" watchlist add "<topic>"
 ```
 
 Use the topic phrasing they gave you. If a "why" line mentions specific names (a competitor, a product), append them as `--queries "<name1>,<name2>"` so the engine searches for them too.
@@ -70,8 +67,8 @@ Use the topic phrasing they gave you. If a "why" line mentions specific names (a
 Then run the baseline. Tell them this takes a few minutes and you will come back with a first brief.
 
 ```bash
-$PY "$L30D/watchlist.py" run-all
-$PY "$L30D/briefing.py" generate
+bash "$TRACKER" watchlist run-all
+bash "$TRACKER" briefing generate
 ```
 
 The watchlist runs default to `--quick` with a 90-day lookback and persist findings to the SQLite store, so "new since last time" works from day one.
@@ -102,9 +99,9 @@ Close with one line on how to change things: "Say 'track X', 'drop X', 'pause th
 ## Adding a topic later
 
 ```bash
-$PY "$L30D/watchlist.py" add "<topic>"
-$PY "$L30D/watchlist.py" run-one "<topic>"
-$PY "$L30D/watchlist.py" delta "<topic>"
+bash "$TRACKER" watchlist add "<topic>"
+bash "$TRACKER" watchlist run-one "<topic>"
+bash "$TRACKER" watchlist delta "<topic>"
 ```
 
 Report the delta as a mini-brief for that topic and update the memory entry.
@@ -112,7 +109,7 @@ Report the delta as a mini-brief for that topic and update the memory entry.
 ## Removing a topic
 
 ```bash
-$PY "$L30D/watchlist.py" remove "<topic>"
+bash "$TRACKER" watchlist remove "<topic>"
 ```
 
 Confirm in one line and update the memory entry.
@@ -120,4 +117,4 @@ Confirm in one line and update the memory entry.
 ## Notes
 
 - Never ask for API keys in chat. If a source needs a key that is not set (X, Particle), say which one and that it goes in the agent's environment, then move on with the sources that work.
-- If `watchlist.py` errors on Python version, the host needs Python 3.12 or newer on PATH. Say so.
+- If the wrapper reports a Python version problem, the host needs Python 3.12 or newer on PATH. Say so.

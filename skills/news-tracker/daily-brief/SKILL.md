@@ -16,17 +16,18 @@ The scheduled daily routine. Runs Tuesday to Friday. The final message is delive
 
 ## Paths
 
+Every shell step goes through one fixed entry point. Set this variable first in each terminal call and call it exactly like this (do not substitute a Python interpreter yourself; the wrapper picks one):
+
 ```bash
-L30D="${HERMES_HOME:-$HOME/.hermes}/skills/research/last30days/scripts"
-PY="$(command -v python3.14 || command -v python3.13 || command -v python3.12 || command -v python3)"
+TRACKER="${HERMES_HOME:-$HOME/.hermes}/skills/news-tracker/bin/tracker"
 ```
 
-Copy these two lines exactly. `HERMES_HOME` already points at this agent's own profile directory, so do not append a profile path. If `$L30D/watchlist.py` is missing, locate it with `find "$HOME/.hermes" -path "*/skills/research/last30days/scripts/watchlist.py" | head -1` and set `L30D` to its directory.
+`HERMES_HOME` already points at this agent's own profile directory, so do not append a profile path. If `$TRACKER` is missing, locate it with `find "$HOME/.hermes" -path "*/skills/news-tracker/bin/tracker" | head -1`.
 
 ## 1. Refresh every tracked topic
 
 ```bash
-$PY "$L30D/watchlist.py" run-all
+bash "$TRACKER" watchlist run-all
 ```
 
 Allow several minutes. It researches each enabled topic (quick mode, 90-day lookback) and stores findings, deduplicated by URL, so anything it reports as new really is new.
@@ -34,7 +35,7 @@ Allow several minutes. It researches each enabled topic (quick mode, 90-day look
 ## 2. Pull the structured brief
 
 ```bash
-$PY "$L30D/briefing.py" generate
+bash "$TRACKER" briefing generate
 ```
 
 This reads the store and emits the day's new findings per topic: title, source, URL, engagement, snippet. It is data, not prose. You write the prose.
