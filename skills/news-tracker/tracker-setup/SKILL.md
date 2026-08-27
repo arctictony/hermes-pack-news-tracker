@@ -42,7 +42,8 @@ The output lists every topic with an `enabled` flag. Tracked means `enabled: tru
 
 - No enabled topics and no dropped ones → first run. Go to Step 1.
 - Only dropped topics → treat as first run, but mention them once: "You dropped X earlier; say 'track X' to pick it back up."
-- Enabled topics exist → this is a change, not onboarding. Say what is tracked in one line and ask what they want to add or drop. Then use "Adding a topic" or "Dropping a topic" below.
+- Enabled topics exist → check whether setup actually finished: `cronjob(action="list")`. If `news-tracker-daily` is paused, or memory has no "News tracker configured" note, setup was interrupted (the person wandered off, the session reset). Do not start over and do not ask about topics again. Say "Picking up where we left off: you're tracking X" and go straight to Step 6, then Step 7.
+- Enabled topics exist and the routines are running → this is a change, not onboarding. Say what is tracked in one line and ask what they want to add or drop. Then use "Adding a topic" or "Dropping a topic" below.
 
 ## Step 1: one question
 
@@ -91,13 +92,15 @@ If the results are obviously noise (the topic name is ambiguous, or nothing rele
 
 Confirm in one line what you will now watch for. Never say "query", "engagement score" or "SQLite".
 
+**If this is the first topic, switch the tracker on now**, before offering anything else. Run Step 6 (resume the routines, state the defaults, save the memory note) as part of this same reply. The tracker must be live the moment one topic is confirmed; a person who wanders off after this message still gets their brief tomorrow. Do not wait for "no more topics".
+
 ## Step 5: offer more, don't demand it
 
-> Want me to watch anything else? Or I'll start with this.
+> Want me to watch anything else? It's already running with what you've given me.
 
 One topic is a complete setup. Read the answer like this:
 
-- **"No", "start", "that's fine", "go"** → Step 6.
+- **"No", "start", "that's fine", "go"** → Step 7 (the routines are already on from Step 4).
 - **A reaction to the five things you just showed** (it names one of them, says "less of", "not the", "more of the X stuff") → that is calibration of the *current* topic. Step 4 again, then ask Step 5 again.
 - **Anything else** (a subject, an interest, "I'd love to know about…", "also keep an eye on…") → it is a **new topic**. Never retune the current topic with it. Say "Adding that as a second topic" and run Steps 2 to 4 for it: research it, show five things, ask which they would have wanted. Then Step 5 again.
 
@@ -107,14 +110,14 @@ One topic at a time, up to five.
 
 ## Step 6: switch on, state the defaults
 
-Resume the routines with the `cronjob` tool:
+Runs as part of the first topic's confirmation (Step 4), or when resuming an interrupted setup (Step 0). Resume the routines with the `cronjob` tool:
 
 - `cronjob(action="resume", job_id="news-tracker-daily")`
 - `cronjob(action="resume", job_id="news-tracker-weekly")`
 
 Then one message, no question:
 
-> Done. I'll post a short brief here weekday mornings at 8, and a Monday roundup. Say "change the time", "add X", "drop X" or "pause" whenever you like.
+> You're on. I'll post a short brief here weekday mornings at 8, and a Monday roundup. Say "change the time", "add X", "drop X" or "pause" whenever you like.
 
 If they mention a different time or fewer days at any point, apply it with `cronjob(action="update", job_id="news-tracker-daily", schedule="<cron expr>")` before resuming, and say the new time back. Cron expressions run in the host's local time.
 
@@ -122,7 +125,7 @@ Save one memory entry: "News tracker configured <date>. Topics: <topic> (watchin
 
 ## Step 7: the podcast lane (optional, after value is shown)
 
-Only now, and only if the Particle tools are **not** already working (no `mcp_particle_*` tools, or `bash "$TRACKER" check-key` says no key). One message:
+Runs once the person has said they have no more topics (Step 5 "no"), or straight after Step 6 when resuming an interrupted setup. Only if the Particle tools are **not** already working (no `mcp_particle_*` tools, or `bash "$TRACKER" check-key` says no key). One message:
 
 > One more thing that makes this better: podcasts. I can add what's being said about <topic> on podcasts, which tends to run deeper than social. It needs a free account with Particle and takes about two minutes. Want to do it now, or later?
 
