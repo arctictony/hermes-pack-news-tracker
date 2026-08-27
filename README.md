@@ -1,11 +1,26 @@
-# news-tracker (Hermes profile distribution)
+# news-tracker (Filament skill pack for Hermes)
 
-A Filament skill pack, packaged as a Hermes profile distribution. One install gives a Hermes agent:
+## Install: one line, pasted to your agent
+
+Send this to the Hermes agent you already have in Filament:
+
+> Install the News Tracker pack: run `curl -fsSL https://raw.githubusercontent.com/arctictony/hermes-pack-news-tracker/main/install.sh | bash`, then run /reload-mcp and start the tracker-setup skill to onboard me.
+
+That is the whole install. The agent fetches the pack, applies it to itself (skills, identity, paused routines, Particle connector), and begins a short interview: what to track, why, podcasts or not, when to post. It then runs a baseline, switches the routines on and posts a first brief. No terminal, no profile, no keys required to start; the podcast lane switches on when `PARTICLE_API_KEY` is added to the agent's `.env`.
+
+Later: "track X", "drop X", "pause the brief", "change the time" all work in chat. Invite the agent to a room and its scheduled posts go to its home room.
+
+## What the pack gives an agent
 
 - **Onboarding** — `tracker-setup`, a natural-language interview that sets topics, cadence and switches the routines on
 - **Skill** — `last30days` (vendored, v3.8.3): research across Reddit, HN, YouTube, X, Polymarket, Digg and the web, with a SQLite store so "new since last time" is real
 - **Connector** — Particle.pro MCP (`https://mcp.particle.pro`) for the podcast lane
 - **Routines** — `news-tracker-daily` (Tue–Fri 08:00) and `news-tracker-weekly` (Mon 08:00), delivered to the agent's Filament home room. Shipped paused; setup enables them
+
+## Two install paths, same files
+
+- **`install.sh` (the one line above)** applies the pack to an existing agent: its current profile, already connected to Filament. This is the member path today.
+- **Profile distribution** (`hermes profile install <this repo> --name news-tracker`) creates a fresh profile from the same files. This is for a Filament-side installer that creates the agent and the profile in one step, and for anyone who wants a separate agent per pack.
 
 ## Layout
 
@@ -21,7 +36,7 @@ skills/
   research/last30days/          the research engine (vendored)
 ```
 
-## Install on a machine that already runs Hermes (this Mac)
+## Distribution path, step by step (this Mac)
 
 1. Install the profile:
    ```bash
