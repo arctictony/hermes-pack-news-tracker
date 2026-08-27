@@ -19,5 +19,12 @@ mcp_servers:
     timeout: 60
     connect_timeout: 20
 
+# The post-turn self-improvement review may propose new skills from a conversation.
+# Stage them for approval instead of letting them land silently: this agent's
+# behaviour is the pack's skills, and an auto-minted skill from one chat has
+# already derailed a session once (agentic-skill-discovery, 27 Aug).
+skills:
+  write_approval: true
+
 cron:
   model_drift_guard: true

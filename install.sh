@@ -115,6 +115,11 @@ else
   say "connector: could not edit config.yaml automatically; add mcp_servers.particle by hand (see README)"
 fi
 
+# Stage agent-authored skill writes for approval (see config.yaml note in the pack).
+if command -v hermes >/dev/null; then
+  HERMES_HOME="$HERMES_DIR" hermes config set skills.write_approval true >/dev/null 2>&1 && say "skills: agent-authored skill writes now need approval"
+fi
+
 if grep -qs '^PARTICLE_API_KEY=' "$HERMES_DIR/.env" || [ -n "${PARTICLE_API_KEY:-}" ]; then
   say "connector: PARTICLE_API_KEY present, podcast lane on"
 else
