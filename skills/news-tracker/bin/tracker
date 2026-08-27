@@ -8,6 +8,7 @@
 #   bash "$TRACKER" research "<topic>" [last30days flags]
 #   bash "$TRACKER" retune "<topic>" "query one,query two"     # re-point a topic at what the user reacted to
 #   bash "$TRACKER" dismiss <finding_id> [<finding_id> ...]     # hide findings the user rejected
+#   bash "$TRACKER" history "<words>" [limit]                   # everything ever stored that matches: first seen, times seen, dismissed?
 #   bash "$TRACKER" set-key <particle_api_key>                  # store the Particle key in this profile's .env
 #   bash "$TRACKER" check-key                                   # verify the stored Particle key against the API
 set -euo pipefail
@@ -41,8 +42,25 @@ case "$sub" in
   retune)
     topic="${1:-}"; queries="${2:-}"
     [ -n "$topic" ] && [ -n "$queries" ] || { echo "usage: tracker retune \"<topic>\" \"query one,query two\""; exit 2; }
-    "$PY" "$L30D/watchlist.py" remove "$topic" >/dev/null 2>&1 || true
-    "$PY" "$L30D/watchlist.py" add "$topic" --queries "$queries"
+    # Update the topic's search queries in place. Never remove+add: remove_topic deletes the
+    # topic's findings, which would wipe history and every dismissal.
+    ( cd "$L30D" && "$PY" - "$topic" "$queries" <<'PYEOF'
+import sys, json, store
+topic, raw = sys.argv[1], sys.argv[2]
+queries = [q.strip() for q in raw.split(",") if q.strip()]
+t = store.get_topic(topic)
+if not t:
+    store.add_topic(topic, search_queries=queries, schedule="0 8 * * *")
+    print(json.dumps({"action": "added", "topic": topic, "queries": queries})); sys.exit(0)
+conn = store._connect()
+try:
+    conn.execute("UPDATE topics SET search_queries = ? WHERE id = ?", (json.dumps(queries), t["id"]))
+    conn.commit()
+finally:
+    conn.close()
+print(json.dumps({"action": "retuned", "topic": topic, "queries": queries, "findings_kept": True}))
+PYEOF
+    )
     ;;
 
   dismiss)
@@ -56,6 +74,29 @@ for arg in sys.argv[1:]:
     except Exception as e:
         print(f"could not dismiss {arg}: {e}")
 print(f"dismissed {n} finding(s)")
+PYEOF
+    )
+    ;;
+
+  history)
+    q="${1:-}"; lim="${2:-10}"
+    [ -n "$q" ] || { echo "usage: tracker history \"<words>\" [limit]"; exit 2; }
+    ( cd "$L30D" && "$PY" - "$q" "$lim" <<'PYEOF'
+import sys, json, store
+q, lim = sys.argv[1], int(sys.argv[2])
+try:
+    rows = store.search_findings(q, limit=lim)
+except Exception as e:
+    print(json.dumps({"query": q, "error": str(e), "matches": []})); sys.exit(0)
+out = []
+for r in rows:
+    out.append({
+        "id": r.get("id"), "topic": r.get("topic_name"), "title": (r.get("source_title") or "")[:120],
+        "source": r.get("source"), "url": r.get("source_url"),
+        "first_seen": r.get("first_seen"), "last_seen": r.get("last_seen"),
+        "times_seen": r.get("sighting_count"), "dismissed": bool(r.get("dismissed")),
+    })
+print(json.dumps({"query": q, "matches": out}, indent=1, default=str))
 PYEOF
     )
     ;;
@@ -88,5 +129,5 @@ PYEOF
     esac
     ;;
 
-  *) echo "usage: tracker watchlist|briefing|research|retune|dismiss|set-key|check-key ..."; exit 2 ;;
+  *) echo "usage: tracker watchlist|briefing|research|retune|dismiss|history|set-key|check-key ..."; exit 2 ;;
 esac

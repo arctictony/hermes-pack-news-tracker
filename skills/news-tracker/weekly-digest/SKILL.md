@@ -24,13 +24,9 @@ TRACKER="${HERMES_HOME:-$HOME/.hermes}/skills/news-tracker/bin/tracker"
 
 `HERMES_HOME` already points at this agent's own profile directory, so do not append a profile path. If `$TRACKER` is missing, locate it with `find "$HOME/.hermes" -path "*/skills/news-tracker/bin/tracker" | head -1`.
 
-## 0. Read the week's briefs first
+## 0. Reactions and history are available to you
 
-```bash
-ls -t "${HERMES_HOME:-$HOME/.hermes}/cron/output/news-tracker-daily/" | head -7
-```
-
-Read them. The digest is a read *of the week*, so it should build on what was already posted, not rediscover it. Also `session_search` for reactions to those briefs (`tracker less OR drop OR "not that"`, last 7 days) and honour them.
+You run in a fresh session, but this agent's history is all searchable. Before writing, `session_search` for reactions to the week's briefs (`tracker less OR drop OR "not that" OR "more on"`, last 7 days) and honour them. Only replies addressed to you or to your briefs count; nothing anyone else said in a room goes into a digest.
 
 ## 1. Refresh and pull the week
 
@@ -45,9 +41,9 @@ The weekly mode returns the last seven days of findings per topic with engagemen
 
 For each topic, search podcast mentions from the last 7 days (`particle_catalog` first if unsure which tool). Note the shows that covered it and the one or two most quotable lines. Skip silently if the tools are absent or unauthorised.
 
-## 2b. Group links into stories
+## 2b. Group into stories, then look each one up
 
-Same rule as the daily brief: a story with several sources is one story. List the sources after it. Count stories, not links.
+Same rule as the daily brief: a story with several sources is one story; count stories, not links. For each story in the digest, run `bash "$TRACKER" history "<distinctive words>"` and `session_search` for the same words. The digest's job is the arc: first seen when, how many times, what changed this week, what it connects to from earlier. A story that has run for three weeks reads differently from one that appeared on Thursday; say which.
 
 ## 3. Write the digest
 
