@@ -95,7 +95,15 @@ Confirm in one line what you will now watch for. Never say "query", "engagement 
 
 > Want me to watch anything else? Or I'll start with this.
 
-One topic is a complete setup. If they add another, repeat Steps 2 to 4 for it, one topic at a time, up to five.
+One topic is a complete setup. Read the answer like this:
+
+- **"No", "start", "that's fine", "go"** → Step 6.
+- **A reaction to the five things you just showed** (it names one of them, says "less of", "not the", "more of the X stuff") → that is calibration of the *current* topic. Step 4 again, then ask Step 5 again.
+- **Anything else** (a subject, an interest, "I'd love to know about…", "also keep an eye on…") → it is a **new topic**. Never retune the current topic with it. Say "Adding that as a second topic" and run Steps 2 to 4 for it: research it, show five things, ask which they would have wanted. Then Step 5 again.
+
+If you genuinely cannot tell, ask one question: "Is that a second thing to watch, or a steer on the first one?" Never guess in the direction of retuning; a wrong retune silently narrows a topic the person was happy with.
+
+One topic at a time, up to five.
 
 ## Step 6: switch on, state the defaults
 
