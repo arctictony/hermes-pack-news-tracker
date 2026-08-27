@@ -98,9 +98,9 @@ Same artefact. The agents tab button runs `hermes profile install <this repo>` s
 
 - `hermes profile update` overwrites `cron/jobs.json`, so a member's changed schedule reverts to the shipped one on update. Setup re-applies from memory if asked.
 - Every story in a brief is looked up across the agent's history first (`tracker history` over the research store, `session_search` over past sessions) and classified new / recurring / previously rejected / connected to an earlier story. Grouping links into stories is the model's judgement at write time, not a key in the store.
-- "Drop X" removes the topic and its stored findings (the engine's `remove_topic` cascades), so re-adding a dropped topic starts its history fresh.
+- "Drop X" is forward-looking: `tracker drop` disables the topic and keeps its findings and dismissals; `tracker track X` resumes with history intact. The engine's own `watchlist remove` deletes history and the skills never call it.
 - The daily job always posts, including a one-line "quiet day". Next step is a pre-run script that skips the agent when the store has nothing new (`{"wakeAgent": false}`).
 - last30days keeps its config at `~/.config/last30days/.env`, shared across profiles on one host.
-- Skills never call Python directly or redirect into `.env`. They go through `skills/news-tracker/bin/tracker` (`watchlist`, `briefing`, `retune`, `dismiss`, `history`, `set-key`, `check-key`), because Hermes's command scanner (tirith) blocks a dynamically selected interpreter (`$PY script.py`) and shell redirection into env files; in cron sessions those blocks are silent.
+- Skills never call Python directly or redirect into `.env`. They go through `skills/news-tracker/bin/tracker` (`watchlist`, `briefing`, `track`, `drop`, `retune`, `dismiss`, `history`, `set-key`, `check-key`), because Hermes's command scanner (tirith) blocks a dynamically selected interpreter (`$PY script.py`) and shell redirection into env files; in cron sessions those blocks are silent.
 - Particle tool names are discovered at run time via `particle_catalog`; no allowlist is set.
 - Without `PARTICLE_API_KEY` the Particle server logs three 401 warnings at session start and the agent carries on. To silence them, set `mcp_servers.particle.enabled: false` in the profile `config.yaml`.

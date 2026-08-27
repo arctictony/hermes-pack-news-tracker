@@ -6,6 +6,8 @@
 #   bash "$TRACKER" watchlist add "<topic>" [--queries "a,b"] | remove "<topic>" | list | run-one "<topic>" | run-all | delta "<topic>"
 #   bash "$TRACKER" briefing generate [--weekly] [--since YYYY-MM-DD] | show [--date YYYY-MM-DD]
 #   bash "$TRACKER" research "<topic>" [last30days flags]
+#   bash "$TRACKER" track "<topic>" ["query one,query two"]    # start (or resume) watching a topic; history kept
+#   bash "$TRACKER" drop "<topic>"                              # stop watching a topic; history and dismissals kept
 #   bash "$TRACKER" retune "<topic>" "query one,query two"     # re-point a topic at what the user reacted to
 #   bash "$TRACKER" dismiss <finding_id> [<finding_id> ...]     # hide findings the user rejected
 #   bash "$TRACKER" history "<words>" [limit]                   # everything ever stored that matches: first seen, times seen, dismissed?
@@ -38,6 +40,53 @@ case "$sub" in
   watchlist) "$PY" "$L30D/watchlist.py" "$@" ;;
   briefing)  "$PY" "$L30D/briefing.py" "$@" ;;
   research)  "$PY" "$L30D/last30days.py" "$@" ;;
+
+  track)
+    topic="${1:-}"; queries="${2:-}"
+    [ -n "$topic" ] || { echo "usage: tracker track \"<topic>\" [\"query one,query two\"]"; exit 2; }
+    ( cd "$L30D" && "$PY" - "$topic" "$queries" <<'PYEOF'
+import sys, json, store
+topic, raw = sys.argv[1], sys.argv[2]
+queries = [q.strip() for q in raw.split(",") if q.strip()] or None
+t = store.get_topic(topic)
+if not t:
+    store.add_topic(topic, search_queries=queries, schedule="0 8 * * *")
+    print(json.dumps({"action": "added", "topic": topic, "queries": queries})); sys.exit(0)
+conn = store._connect()
+try:
+    if queries:
+        conn.execute("UPDATE topics SET enabled = 1, search_queries = ?, updated_at = datetime('now') WHERE id = ?", (json.dumps(queries), t["id"]))
+    else:
+        conn.execute("UPDATE topics SET enabled = 1, updated_at = datetime('now') WHERE id = ?", (t["id"],))
+    conn.commit()
+    n = conn.execute("SELECT COUNT(*) FROM findings WHERE topic_id = ?", (t["id"],)).fetchone()[0]
+finally:
+    conn.close()
+print(json.dumps({"action": "resumed" if not t.get("enabled") else "already_tracking", "topic": topic, "history_findings": n}))
+PYEOF
+    )
+    ;;
+
+  drop)
+    topic="${1:-}"
+    [ -n "$topic" ] || { echo "usage: tracker drop \"<topic>\""; exit 2; }
+    ( cd "$L30D" && "$PY" - "$topic" <<'PYEOF'
+import sys, json, store
+topic = sys.argv[1]
+t = store.get_topic(topic)
+if not t:
+    print(json.dumps({"action": "not_found", "topic": topic})); sys.exit(0)
+conn = store._connect()
+try:
+    conn.execute("UPDATE topics SET enabled = 0, updated_at = datetime('now') WHERE id = ?", (t["id"],))
+    conn.commit()
+    n = conn.execute("SELECT COUNT(*) FROM findings WHERE topic_id = ?", (t["id"],)).fetchone()[0]
+finally:
+    conn.close()
+print(json.dumps({"action": "dropped", "topic": topic, "history_kept": n, "note": "say 'track <topic>' to resume with history intact"}))
+PYEOF
+    )
+    ;;
 
   retune)
     topic="${1:-}"; queries="${2:-}"
@@ -129,5 +178,5 @@ PYEOF
     esac
     ;;
 
-  *) echo "usage: tracker watchlist|briefing|research|retune|dismiss|history|set-key|check-key ..."; exit 2 ;;
+  *) echo "usage: tracker watchlist|briefing|research|track|drop|retune|dismiss|history|set-key|check-key ..."; exit 2 ;;
 esac

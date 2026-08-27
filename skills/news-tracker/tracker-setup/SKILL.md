@@ -38,8 +38,11 @@ TRACKER="${HERMES_HOME:-$HOME/.hermes}/skills/news-tracker/bin/tracker"
 bash "$TRACKER" watchlist list
 ```
 
-- No topics → first run. Go to Step 1.
-- Topics exist → this is a change, not onboarding. Say what is tracked in one line and ask what they want to add or drop. Then use "Adding a topic" or "Removing a topic" below.
+The output lists every topic with an `enabled` flag. Tracked means `enabled: true`; a dropped topic stays in the list with its history, disabled.
+
+- No enabled topics and no dropped ones → first run. Go to Step 1.
+- Only dropped topics → treat as first run, but mention them once: "You dropped X earlier; say 'track X' to pick it back up."
+- Enabled topics exist → this is a change, not onboarding. Say what is tracked in one line and ask what they want to add or drop. Then use "Adding a topic" or "Dropping a topic" below.
 
 ## Step 1: one question
 
@@ -56,10 +59,12 @@ Accept whatever they give. Do not ask them to narrow it, explain it or justify i
 One line: "Looking at the last 30 days on that. About a minute." Then:
 
 ```bash
-bash "$TRACKER" watchlist add "<topic>"
+bash "$TRACKER" track "<topic>"
 bash "$TRACKER" watchlist run-one "<topic>"
 bash "$TRACKER" briefing generate
 ```
+
+`track` adds a new topic, or resumes a dropped one with its history and dismissals intact.
 
 ## Step 3: show, then ask them to point
 
@@ -146,13 +151,13 @@ Assume they have never created an API key. Walk them through it one step per mes
 
 Steps 2 to 4 for the new topic, then a one-line confirmation and a memory update.
 
-## Removing a topic
+## Dropping a topic
 
 ```bash
-bash "$TRACKER" watchlist remove "<topic>"
+bash "$TRACKER" drop "<topic>"
 ```
 
-One-line confirmation, memory update.
+Dropping is forward-looking: it stops the topic being researched and posted, and keeps everything already learned (findings, dismissals) so "track X" later resumes where it left off and the history lookups still know the story. Never use `watchlist remove`; that deletes the history. One-line confirmation, memory update.
 
 ## Notes
 
