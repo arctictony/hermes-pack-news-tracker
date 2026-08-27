@@ -30,7 +30,6 @@ __pycache__/
 hermes-agent/
 .worktrees/
 profiles/
-bin/
 node_modules/
 plugins/
 mcp-tokens/

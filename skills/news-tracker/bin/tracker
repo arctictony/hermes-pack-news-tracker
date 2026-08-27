@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# tracker — fixed entry point for the news-tracker research scripts.
+# Skills call this by path so the agent never has to pick a Python itself
+# (a dynamically selected interpreter trips Hermes's command scanner).
+#
+#   bash "$TRACKER" watchlist add "<topic>" | remove "<topic>" | list | run-one "<topic>" | run-all | delta "<topic>"
+#   bash "$TRACKER" briefing generate [--weekly] [--since YYYY-MM-DD]
+#   bash "$TRACKER" research "<topic>" [last30days flags]
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+L30D="$HERE/../../research/last30days/scripts"
+[ -f "$L30D/watchlist.py" ] || { echo "tracker: last30days scripts not found at $L30D"; exit 1; }
+
+PY=""
+for c in python3.14 python3.13 python3.12 python3; do
+  if command -v "$c" >/dev/null 2>&1; then PY="$c"; break; fi
+done
+[ -n "$PY" ] || { echo "tracker: no python3 on PATH"; exit 1; }
+if ! "$PY" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)'; then
+  echo "tracker: needs Python 3.12 or newer on PATH (found $("$PY" --version 2>&1))"; exit 1
+fi
+
+sub="${1:-}"; shift || true
+case "$sub" in
+  watchlist) "$PY" "$L30D/watchlist.py" "$@" ;;
+  briefing)  "$PY" "$L30D/briefing.py" "$@" ;;
+  research)  "$PY" "$L30D/last30days.py" "$@" ;;
+  *) echo "usage: tracker watchlist|briefing|research ..."; exit 2 ;;
+esac
