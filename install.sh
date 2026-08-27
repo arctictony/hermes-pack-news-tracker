@@ -36,6 +36,29 @@ else
 fi
 VERSION="$(sed -n 's/^version: *//p' "$PACK/distribution.yaml" | head -1)"
 
+# 0. Python: the research engine needs 3.12+. If nothing suitable is on PATH, install one
+#    through uv (ships with Hermes) so the agent never has to ask anyone to update Python.
+have_py=0
+for c in python3.14 python3.13 python3.12 python3; do
+  command -v "$c" >/dev/null 2>&1 && "$c" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)' >/dev/null 2>&1 && { have_py=1; break; }
+done
+if [ "$have_py" = 0 ]; then
+  UV=""; for cand in "$HOME/.hermes/bin/uv" "$(command -v uv 2>/dev/null)" /usr/local/bin/uv; do [ -n "$cand" ] && [ -x "$cand" ] && { UV="$cand"; break; }; done
+  if [ -n "$UV" ]; then
+    if "$UV" python find '>=3.12' >/dev/null 2>&1; then
+      say "python: 3.12+ available via uv"
+    elif "$UV" python install 3.12 >/dev/null 2>&1; then
+      say "python: installed 3.12 via uv (no system change)"
+    else
+      say "python: WARNING could not install 3.12 via uv; research will fail until Python 3.12+ is available"
+    fi
+  else
+    say "python: WARNING no Python 3.12+ and no uv found; research will fail until Python 3.12+ is available"
+  fi
+else
+  say "python: 3.12+ found on PATH"
+fi
+
 # 1. Skills (merge; pack skills overwrite same-named ones)
 mkdir -p "$HERMES_DIR/skills"
 cp -R "$PACK/skills/." "$HERMES_DIR/skills/"

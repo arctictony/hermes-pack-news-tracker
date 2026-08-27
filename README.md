@@ -14,7 +14,9 @@ Later: "track X", "drop X", "pause the brief", "change the time", "connect podca
 
 ## Keys, for non-technical users
 
-X coverage works the same way as Particle below, one step per message: console.x.ai, create a key (`xai-…`), paste it, the agent stores it in the research engine's own config with `tracker set-x-key` and verifies it against the xAI API. Offered as a later task, never in the same breath as Particle, and clearly labelled as billed on usage.
+**X via Composio (Filament agents).** When the agent has Composio tools, X is a consent click: the agent asks Composio to start a `twitter` connection, posts the OAuth link, verifies with one tiny search. The daily brief and digest then run `TWITTER_RECENT_SEARCH` once per topic (50 posts/day, 100/week, never paginated) plus the member's followed lists, and write the results into the research store with `tracker ingest`, so X gets the same story grouping, history and dismiss as everything else. **Cost sits with whoever owns the X developer app behind Composio** (Composio stopped providing managed X credentials in Feb 2026): X bills about $0.005 per post read, so the caps matter. Rough order: 50 reads × 3 topics × 22 weekdays ≈ 3,300 reads ≈ $17/month per member, before lists.
+
+**X via xAI key (no Composio).** Fallback: console.x.ai, create a key (`xai-…`), paste it, stored in the research engine's own config with `tracker set-x-key`, verified against the xAI API. Billed on usage to the member.
 
 ## The Particle key, for non-technical users
 
@@ -90,7 +92,7 @@ hermes profile update news-tracker          # pull a new pack version, keep .env
 ## Requirements on the host
 
 - Hermes ≥ 0.18.0
-- Python 3.12+ on PATH (the research scripts; the skills resolve `python3.14`, `3.13`, `3.12`, then `python3`)
+- Python 3.12+ for the research scripts. **Self-provisioning:** `install.sh` looks for one on PATH and otherwise installs 3.12 through `uv` (ships with Hermes), and the wrapper finds uv-managed interpreters, so nobody has to be asked to update Python
 - `node` (Digg source), `yt-dlp` (YouTube) — optional but recommended
 - Keys, all optional: `PARTICLE_API_KEY` (podcasts), `XAI_API_KEY` (X on hosted agents), `BRAVE_API_KEY` (web without native search), `SCRAPECREATORS_API_KEY`
 

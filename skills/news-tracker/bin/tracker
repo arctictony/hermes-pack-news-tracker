@@ -11,6 +11,7 @@
 #   bash "$TRACKER" retune "<topic>" "query one,query two"     # re-point a topic at what the user reacted to
 #   bash "$TRACKER" dismiss <finding_id> [<finding_id> ...]     # hide findings the user rejected
 #   bash "$TRACKER" history "<words>" [limit]                   # everything ever stored that matches: first seen, times seen, dismissed?
+#   bash "$TRACKER" ingest "<topic>" <file.json>                 # add findings the agent fetched itself (e.g. X via Composio) to the store
 #   bash "$TRACKER" set-key <particle_api_key>                  # store the Particle key in this profile's .env
 #   bash "$TRACKER" check-key                                   # verify the stored Particle key against the API
 #   bash "$TRACKER" set-x-key <xai_api_key>                     # store an xAI key for X/Twitter coverage (engine config)
@@ -25,14 +26,23 @@ L30D="$HERE/../../research/last30days/scripts"
 ENV_FILE="$PROFILE/.env"
 [ -f "$L30D/watchlist.py" ] || { echo "tracker: last30days scripts not found at $L30D"; exit 1; }
 
+# Python: the research engine hard-requires 3.12+. Look on PATH, then in uv's
+# managed interpreters (uv ships with Hermes; install.sh installs 3.12 through it
+# when nothing suitable exists), so nobody has to be asked to "update Python".
+py_ok() { "$1" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)' >/dev/null 2>&1; }
 PY=""
 for c in python3.14 python3.13 python3.12 python3; do
-  if command -v "$c" >/dev/null 2>&1; then PY="$c"; break; fi
+  if command -v "$c" >/dev/null 2>&1 && py_ok "$c"; then PY="$c"; break; fi
 done
-[ -n "$PY" ] || { echo "tracker: no python3 on PATH"; exit 1; }
-if ! "$PY" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)'; then
-  echo "tracker: needs Python 3.12 or newer on PATH (found $("$PY" --version 2>&1))"; exit 1
+if [ -z "$PY" ]; then
+  for uv in "$HOME/.hermes/bin/uv" "$(command -v uv 2>/dev/null)" /usr/local/bin/uv; do
+    if [ -n "$uv" ] && [ -x "$uv" ]; then
+      cand="$("$uv" python find '>=3.12' 2>/dev/null || true)"
+      if [ -n "$cand" ] && py_ok "$cand"; then PY="$cand"; break; fi
+    fi
+  done
 fi
+[ -n "$PY" ] || { echo "tracker: no Python 3.12+ found on PATH or via uv. Run the pack installer again; it installs one with uv."; exit 1; }
 
 read_key() {
   if [ -n "${PARTICLE_API_KEY:-}" ]; then printf '%s' "$PARTICLE_API_KEY"; return; fi
@@ -128,6 +138,39 @@ for arg in sys.argv[1:]:
     except Exception as e:
         print(f"could not dismiss {arg}: {e}")
 print(f"dismissed {n} finding(s)")
+PYEOF
+    )
+    ;;
+
+  ingest)
+    topic="${1:-}"; file="${2:-}"
+    [ -n "$topic" ] && [ -f "$file" ] || { echo "usage: tracker ingest \"<topic>\" <file.json>  (JSON list of {title,url,source,author,text,engagement,published})"; exit 2; }
+    ( cd "$L30D" && "$PY" - "$topic" "$file" <<'PYEOF'
+import sys, json, store
+topic, path = sys.argv[1], sys.argv[2]
+items = json.load(open(path))
+if isinstance(items, dict): items = items.get("items") or items.get("data") or []
+t = store.get_topic(topic)
+if not t:
+    store.add_topic(topic, schedule="0 8 * * *"); t = store.get_topic(topic)
+findings = []
+for it in items:
+    url = it.get("url") or it.get("source_url")
+    if not url: continue
+    findings.append({
+        "source": it.get("source") or "x",
+        "source_url": url,
+        "source_title": (it.get("title") or (it.get("text") or "")[:120]),
+        "author": it.get("author") or "",
+        "content": it.get("text") or it.get("content") or "",
+        "summary": it.get("summary") or "",
+        "engagement_score": float(it.get("engagement") or it.get("engagement_score") or 0),
+        "relevance_score": float(it.get("relevance") or 0),
+        "published_at": it.get("published") or it.get("published_at"),
+    })
+run_id = store.record_run(t["id"], source_mode="agent-ingest", status="completed")
+res = store.store_findings(run_id, t["id"], findings)
+print(json.dumps({"topic": topic, "received": len(items), **res}))
 PYEOF
     )
     ;;
@@ -324,5 +367,5 @@ PYEOF
     esac
     ;;
 
-  *) echo "usage: tracker watchlist|briefing|research|track|drop|retune|dismiss|history|set-key|check-key|set-x-key|check-x-key|onboarding|reset ..."; exit 2 ;;
+  *) echo "usage: tracker watchlist|briefing|research|track|drop|retune|dismiss|history|ingest|set-key|check-key|set-x-key|check-x-key|onboarding|reset ..."; exit 2 ;;
 esac

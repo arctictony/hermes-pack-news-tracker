@@ -127,9 +127,20 @@ At a pause, and only if the Particle tools are not already working (no `mcp_part
 
 ## Task 4: `x_coverage`
 
-At a later pause (never in the same breath as Task 3), only if `bash "$TRACKER" check-x-key` says no key:
+At a later pause (never in the same breath as Task 3). Two routes; pick by what tools you have.
 
-> Do you want X (Twitter) in the mix? Right now I cover Reddit, Hacker News, YouTube and the web. X needs a key from xAI, which is billed on usage, and takes a couple of minutes to set up. Want to do it, or leave X out?
+**Route A, Composio (Filament agents have this).** If you have Composio tools (names containing `COMPOSIO`: a catalog search, a connections manager, an executor), X is a consent click, not a key:
+
+> Do you want X (Twitter) in the mix? Right now I cover Reddit, Hacker News, YouTube and the web. Connecting your X account takes one click and lets me include what people, and the accounts you follow, are saying. Want to connect it, or leave X out?
+
+- "Leave it" → `onboarding skip x_coverage`. "Later" → `onboarding later x_coverage 7`.
+- "Yes" → use the Composio connections tool to start a connection for the `twitter` toolkit. It returns a link. Post the link with one line: "Open this, approve, and tell me when you're done." When they say done, verify with one tiny call: execute `TWITTER_RECENT_SEARCH` with `query: "<their first topic>"`, `max_results: 10`. Success → "X is in. It'll show up from the next brief." `onboarding done x_coverage`; memory: "X: on (Composio)". Failure → "The connection didn't complete. Want to try the link again?" Once more, then `later`.
+
+Never paste the link into a shared room; do this in a private conversation.
+
+**Route B, xAI key (no Composio).** Only if there are no Composio tools:
+
+> Do you want X (Twitter) in the mix? X needs a key from xAI, which is billed on usage, and takes a couple of minutes to set up. Want to do it, or leave X out?
 
 "Leave it" → `onboarding skip x_coverage`. "Later" → `onboarding later x_coverage 7`. "Yes" → **Getting an xAI key** below, then `onboarding done x_coverage`.
 

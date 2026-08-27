@@ -37,11 +37,11 @@ bash "$TRACKER" briefing generate --weekly
 
 The weekly mode returns the last seven days of findings per topic with engagement, so you can see which threads grew and which died.
 
-## 2. Podcast lane (only if Particle tools are available)
+## 1b. X lane (only if Composio tools are present and X is connected)
 
-For each topic, search podcast mentions from the last 7 days (`particle_catalog` first if unsure which tool). Note the shows that covered it and the one or two most quotable lines. Skip silently if the tools are absent or unauthorised.
+Same procedure as the daily brief's X lane, with `start_time` seven days ago and `max_results: 100`, one call per topic and one per followed list, never paginated. Ingest with `bash "$TRACKER" ingest`, then re-run `bash "$TRACKER" briefing generate --weekly`.
 
-## 2b. Group into stories, then look each one up
+## 2. Podcast lane## 2b. Group into stories, then look each one up
 
 Same rule as the daily brief: a story with several sources is one story; count stories, not links. For each story in the digest, run `bash "$TRACKER" history "<distinctive words>"` and `session_search` for the same words. The digest's job is the arc: first seen when, how many times, what changed this week, what it connects to from earlier. A story that has run for three weeks reads differently from one that appeared on Thursday; say which.
 

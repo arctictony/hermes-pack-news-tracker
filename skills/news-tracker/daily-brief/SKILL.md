@@ -48,11 +48,22 @@ This reads the store and emits the day's new findings per topic: title, source, 
 
 If it reports nothing new for any topic, skip to step 4 with the quiet-day format.
 
-## 3. Podcast lane (only if Particle tools are available)
+## 2b. X lane (only if Composio tools are present and X is connected)
 
-Tool names start with `mcp_particle_`. If you are unsure which tool searches transcripts, call `particle_catalog` first and pick the transcript or mention search. For each topic, search mentions from the last 7 days and keep at most two per topic: the show, the speaker if labelled, one sentence on what was said, and the episode link. Skip the lane silently if the tools are absent or return an auth error.
+Composio tools have names containing `COMPOSIO` (catalog search, connections manager, executor). If they exist and the connections manager shows a `twitter` connection, run this per enabled topic; otherwise skip the lane silently.
 
-## 3b. Group links into stories, then look each one up
+1. Execute `TWITTER_RECENT_SEARCH` once per topic: `query` = the topic name plus its retune queries joined with OR, with `-is:retweet lang:en`; `max_results: 50`; `sort_order: "relevancy"`; `start_time` = 24 hours ago (UTC, `YYYY-MM-DDTHH:mm:ssZ`); `tweet_fields: ["public_metrics","created_at","author_id"]`; `expansions: ["author_id"]`. **One call per topic, never paginate.** Every post read costs money.
+2. If the member follows or owns X lists (`TWITTER_GET_USER_FOLLOWED_LISTS`, `TWITTER_GET_USER_OWNED_LISTS`), pull each list's timeline once (`TWITTER_LIST_POSTS_TIMELINE_BY_LIST_ID`, `max_results: 50`) and keep only posts that mention a tracked topic. Tag those `source: "x-list"`; they earn a "from people you follow" clause in the brief.
+3. Turn the results into a JSON list and write it to a file with the file tool, one object per post: `{"title": "<first 100 chars of text>", "url": "https://x.com/<username>/status/<id>", "source": "x" or "x-list", "author": "@<username>", "text": "<text>", "engagement": <like_count + 2*retweet_count + quote_count>, "published": "<created_at>"}`. Then:
+   ```bash
+   bash "$TRACKER" ingest "<topic>" <path-to-file.json>
+   ```
+   Ingest dedupes by URL against everything already stored, so a post you saw yesterday is not new today.
+4. Re-run `bash "$TRACKER" briefing generate` so the day's data includes X.
+
+Never post raw tweet text longer than one line; summarise and link. Engagement goes in the sentence ("2k likes") only when notable.
+
+## 3. Podcast lane## 3b. Group links into stories, then look each one up
 
 The store dedupes by URL, so the same story arrives more than once: a Reddit thread that links to a GitHub repo, the repo itself, and an HN post about it are three findings and one story. Cluster findings that are about the same product, project, person or event (same outbound link, same name in the title, near-identical titles). Count stories, not links.
 
@@ -80,7 +91,8 @@ Format, in chat-safe markdown:
 
 **<Topic 1>**
 • **<Story>** — <what is new, one line> ([Reddit](url), [GitHub](url))
-• **<Story>** — <second item if it earns its place> ([Hacker News](url))
+• **<Story>** — <second item if it earns its place> ([Hacker News](url), [X](url))
+• **<Story>** — <from people you follow, if any> ([@handle on X](url))
 🎙 **<Show>** — <one-line takeaway> ([episode](url))
 
 **<Topic 2>**
