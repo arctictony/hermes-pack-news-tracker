@@ -1,0 +1,23 @@
+# news-tracker profile config. Model lines match the host's default profile;
+# change them if this agent should run on a different model.
+model:
+  default: gemini-3.6-flash
+  provider: gemini
+
+plugins:
+  enabled:
+    - filament-fcm
+
+# Connectors. Particle.pro = podcast intelligence (100k+ transcribed shows).
+# Key comes from the profile's .env as PARTICLE_API_KEY. Without it the
+# server returns 401 and the skills fall back to social + web only.
+mcp_servers:
+  particle:
+    url: "https://mcp.particle.pro"
+    headers:
+      X-API-Key: "${PARTICLE_API_KEY}"
+    timeout: 60
+    connect_timeout: 20
+
+cron:
+  model_drift_guard: true

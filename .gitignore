@@ -1,0 +1,45 @@
+# Credentials
+auth.json
+.env
+.env.EXAMPLE
+# Runtime state
+state.db
+state.db-shm
+state.db-wal
+hermes_state.db
+response_store.db*
+gateway.pid
+gateway_state.json
+processes.json
+auth.lock
+# User data
+memories/
+sessions/
+logs/
+plans/
+workspace/
+home/
+# Caches
+image_cache/
+audio_cache/
+document_cache/
+browser_screenshots/
+cache/
+__pycache__/
+# Infrastructure
+hermes-agent/
+.worktrees/
+profiles/
+bin/
+node_modules/
+plugins/
+mcp-tokens/
+# User customization
+local/
+# Backups
+checkpoints/
+sandboxes/
+backups/
+errors.log
+.hermes_history
+.DS_Store

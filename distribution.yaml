@@ -1,0 +1,20 @@
+name: news-tracker
+version: 0.1.0
+description: "Tracks what people are saying about your topics across social, web and podcasts. Daily brief, weekly digest, posted to the room."
+hermes_requires: ">=0.18.0"
+author: "Filament"
+license: "MIT"
+
+env_requires:
+  - name: PARTICLE_API_KEY
+    description: "Particle.pro key for the podcast lane. Free $10 starter credit at https://platform.particle.pro/register"
+    required: false
+  - name: XAI_API_KEY
+    description: "xAI key for X/Twitter coverage on hosted agents (browser cookies are not available there). Optional"
+    required: false
+  - name: BRAVE_API_KEY
+    description: "Brave Search key for web coverage when the agent has no native web search. Optional"
+    required: false
+  - name: SCRAPECREATORS_API_KEY
+    description: "ScrapeCreators key adds TikTok, Instagram, LinkedIn and X backup. 10k free calls. Optional"
+    required: false
