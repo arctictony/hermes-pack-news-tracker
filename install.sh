@@ -2,7 +2,7 @@
 # news-tracker skill pack — apply to the Hermes agent that runs this script.
 #
 # Meant to be run BY the agent, from a one-line request in chat:
-#   git clone -q https://github.com/arctictony/hermes-pack-news-tracker.git /tmp/news-tracker && bash /tmp/news-tracker/install.sh
+#   (git clone -q https://github.com/arctictony/hermes-pack-news-tracker.git /tmp/news-tracker 2>/dev/null || git -C /tmp/news-tracker pull -q) && bash /tmp/news-tracker/install.sh
 # (clone-then-run rather than curl|bash, which Hermes flags for approval)
 #
 # It installs the pack into the current profile ($HERMES_HOME, or ~/.hermes):

@@ -4,9 +4,9 @@
 
 Send this to the Hermes agent you already have in Filament:
 
-> Install the News Tracker pack: run `git clone -q https://github.com/arctictony/hermes-pack-news-tracker.git /tmp/news-tracker && bash /tmp/news-tracker/install.sh`, then run /reload-mcp and start the tracker-setup skill to onboard me.
+> Install the News Tracker pack: run `(git clone -q https://github.com/arctictony/hermes-pack-news-tracker.git /tmp/news-tracker 2>/dev/null || git -C /tmp/news-tracker pull -q) && bash /tmp/news-tracker/install.sh`, then run /reload-mcp and start the tracker-setup skill to onboard me.
 
-(Clone-then-run rather than `curl | bash`: Hermes flags piping remote content to a shell for approval, which a member would see as a stall.)
+(Clone-or-pull then run, rather than `curl | bash` or `rm -rf` + clone: Hermes flags piping remote content to a shell and deleting under `/tmp` for approval, which a member would see as a 60-second stall. The same line does first install and every update.)
 
 That is the whole install. The agent fetches the pack, applies it to itself (skills, identity, paused routines, Particle connector) and asks **one question**: what to keep an eye on. It researches that for a minute, shows five things people said about it, and asks which ones you would have wanted to know about. Your answer becomes the settings; you never describe preferences. Then it states the schedule (weekday brief at 08:00, Monday roundup), switches the routines on, and offers the podcast lane as an optional extra with a step-by-step walk-through for getting a Particle key.
 
