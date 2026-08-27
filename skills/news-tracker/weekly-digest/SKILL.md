@@ -24,6 +24,14 @@ TRACKER="${HERMES_HOME:-$HOME/.hermes}/skills/news-tracker/bin/tracker"
 
 `HERMES_HOME` already points at this agent's own profile directory, so do not append a profile path. If `$TRACKER` is missing, locate it with `find "$HOME/.hermes" -path "*/skills/news-tracker/bin/tracker" | head -1`.
 
+## 0. Read the week's briefs first
+
+```bash
+ls -t "${HERMES_HOME:-$HOME/.hermes}/cron/output/news-tracker-daily/" | head -7
+```
+
+Read them. The digest is a read *of the week*, so it should build on what was already posted, not rediscover it. Also `session_search` for reactions to those briefs (`tracker less OR drop OR "not that"`, last 7 days) and honour them.
+
 ## 1. Refresh and pull the week
 
 ```bash
@@ -36,6 +44,10 @@ The weekly mode returns the last seven days of findings per topic with engagemen
 ## 2. Podcast lane (only if Particle tools are available)
 
 For each topic, search podcast mentions from the last 7 days (`particle_catalog` first if unsure which tool). Note the shows that covered it and the one or two most quotable lines. Skip silently if the tools are absent or unauthorised.
+
+## 2b. Group links into stories
+
+Same rule as the daily brief: a story with several sources is one story. List the sources after it. Count stories, not links.
 
 ## 3. Write the digest
 

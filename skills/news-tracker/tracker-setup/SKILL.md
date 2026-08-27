@@ -63,7 +63,7 @@ bash "$TRACKER" briefing generate
 
 ## Step 3: show, then ask them to point
 
-From the briefing output, pick the five highest-engagement findings for the topic. Post them as a numbered list, one line each: what it is, where it was said, link. Then one question:
+From the briefing output, group the findings into stories first: the store dedupes by URL, so a Reddit thread about a project and that project's GitHub repo arrive as two findings and are one story. Same name, same outbound link or near-identical titles means one story. Then pick the five highest-engagement *stories* and post them as a numbered list, one line each: what it is, then its sources in brackets, then one link. Then one question:
 
 > Which of these would you have wanted to know about? Numbers are fine. "All of it" or "none of that" also work.
 
@@ -76,9 +76,9 @@ If the results are obviously noise (the topic name is ambiguous, or nothing rele
   ```bash
   bash "$TRACKER" retune "<topic>" "<query one>,<query two>"
   ```
-  Dismiss the ones they did not pick so they do not come back:
+  Dismiss the ones they did not pick so they do not come back, and dismiss every finding inside a rejected story, not just the one you listed:
   ```bash
-  bash "$TRACKER" dismiss <id> <id>
+  bash "$TRACKER" dismiss <id> <id> <id>
   ```
   (ids are the `id` field in the briefing output.)
 - "None of that" → ask one question about what they were hoping to see, in their words, and retune with that. If still nothing, suggest a different phrasing of the topic.
