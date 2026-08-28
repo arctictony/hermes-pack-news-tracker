@@ -461,6 +461,7 @@ PYEOF
     if [ "$with_keys" = 1 ]; then
       if [ -f "$ENV_FILE" ]; then
         tmp="$(mktemp "$PROFILE/.env.XXXXXX")"; grep -v '^PARTICLE_API_KEY=\|^X_BEARER_TOKEN=' "$ENV_FILE" > "$tmp" || true; mv "$tmp" "$ENV_FILE"; chmod 600 "$ENV_FILE"
+        bash "$0" config-set "mcp_servers.particle.headers.X-API-Key" '${PARTICLE_API_KEY}' >/dev/null 2>&1 || true
       fi
       cfg="$HOME/.config/last30days/.env"
       if [ -f "$cfg" ]; then
@@ -483,7 +484,12 @@ PYEOF
     grep -v '^PARTICLE_API_KEY=' "$ENV_FILE" > "$tmp" || true
     printf 'PARTICLE_API_KEY=%s\n' "$key" >> "$tmp"
     mv "$tmp" "$ENV_FILE"; chmod 600 "$ENV_FILE"
-    echo "saved: PARTICLE_API_KEY written to this agent's .env (ends ...${key: -4})"
+    # Also write the key straight into the MCP header. The ${PARTICLE_API_KEY} placeholder
+    # depends on the running process having loaded .env and on the Hermes build supporting
+    # interpolation; a literal header works everywhere and survives /reload-mcp.
+    bash "$0" config-set "mcp_servers.particle.headers.X-API-Key" "$key" >/dev/null 2>&1 || true
+    chmod 600 "$PROFILE/config.yaml" 2>/dev/null || true
+    echo "saved: PARTICLE_API_KEY written to this agent's .env and Particle MCP header (ends ...${key: -4}). Run /reload-mcp (or /restart) to load the podcast tools."
     ;;
 
   check-key)
