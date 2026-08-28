@@ -128,7 +128,7 @@ and `session_search("<the same words>")`. Use the two answers to classify the st
 - **Previously rejected** (any finding in the cluster is `dismissed`, or a past reply said "less of that") → leave it out. Don't relitigate.
 - **Connected to an earlier story** (same company, same people, a follow-up) → say so in a clause: "follows the funding round we flagged on 15 Aug". This is the context a reader can't get from a link.
 
-One line per story, sources listed after it: "Crew: shared workspace for humans and multiple AI agents (Reddit, GitHub)". A reaction to a story applies to every finding in it.
+One line per story, sources listed after it, **one label per source**: two Reddit threads are `([Reddit](url), [GitHub](url))` with the stronger thread linked, never `(Reddit, GitHub, Reddit)`. A reaction to a story applies to every finding in it.
 
 ## 4. Write the brief
 

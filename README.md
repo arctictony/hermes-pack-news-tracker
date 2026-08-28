@@ -55,6 +55,18 @@ skills/
   research/last30days/          the research engine (vendored)
 ```
 
+## Simulating the member experience
+
+`dev/simulate.sh` creates a fresh Hermes profile on this machine, installs the pack from the checkout, seeds keys from `~/.hermes/.env` (and any profile `.env` for Particle/X), and plays a conversation:
+
+```bash
+dev/simulate.sh                              # interactive: type as the member
+dev/simulate.sh dev/scenarios/first-run.txt  # replay a scripted first conversation
+KEEP=1 PROFILE=demo dev/simulate.sh          # keep the profile: hermes -p demo chat
+```
+
+Replies are printed raw (markdown intact) so link formatting can be checked. The profile is deleted afterwards unless `KEEP=1`.
+
 ## Distribution path, step by step (this Mac)
 
 1. Install the profile:

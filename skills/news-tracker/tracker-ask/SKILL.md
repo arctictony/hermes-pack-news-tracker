@@ -27,7 +27,7 @@ bash "$TRACKER" watchlist run-one "X"
 bash "$TRACKER" watchlist delta "X"
 ```
 
-Report only the new findings, grouped into stories, two to five lines. If `delta` says there is not enough history yet, use `bash "$TRACKER" brief-data` and report that topic's findings instead. If X is not a tracked topic, say so and offer to track it.
+Report only the new findings, grouped into stories, two to five lines, one link label per source. If `delta` says there is not enough history yet, use `bash "$TRACKER" brief-data` and report that topic's findings instead. If X is not a tracked topic, say so and offer to track it.
 
 ## "What are podcasts saying about X?"
 

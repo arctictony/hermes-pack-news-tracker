@@ -51,7 +51,7 @@ Same three routes as the daily brief, in the same order. Direct: `bash "$TRACKER
 
 ## 2. Podcast lane## 2b. Group into stories, then look each one up
 
-Same rule as the daily brief: a story with several sources is one story; count stories, not links. For each story in the digest, run `bash "$TRACKER" history "<distinctive words>"` and `session_search` for the same words. The digest's job is the arc: first seen when, how many times, what changed this week, what it connects to from earlier. A story that has run for three weeks reads differently from one that appeared on Thursday; say which.
+Same rule as the daily brief: a story with several sources is one story; count stories, not links; one link label per source. For each story in the digest, run `bash "$TRACKER" history "<distinctive words>"` and `session_search` for the same words. The digest's job is the arc: first seen when, how many times, what changed this week, what it connects to from earlier. A story that has run for three weeks reads differently from one that appeared on Thursday; say which.
 
 ## 3. Write the digest
 

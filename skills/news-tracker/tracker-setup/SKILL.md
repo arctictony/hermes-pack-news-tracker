@@ -74,7 +74,7 @@ bash "$TRACKER" watchlist run-one "<topic>"
 bash "$TRACKER" brief-data
 ```
 
-**Show five stories, then ask them to point.** Group findings into stories first (a Reddit thread about a project and the project's GitHub repo are one story; same name, same outbound link or near-identical titles). Pick the five highest-engagement *stories*, numbered, one line each. The sources **are** the links, written as markdown links in parentheses at the end of the line. Never paste a bare URL, never put a URL on its own line, never use square brackets except as part of a `[label](url)` link. Exactly this shape:
+**Show five stories, then ask them to point.** Group findings into stories first (a Reddit thread about a project and the project's GitHub repo are one story; same name, same outbound link or near-identical titles). Pick the five highest-engagement *stories*, numbered, one line each. The sources **are** the links, written as markdown links in parentheses at the end of the line, one label per source (link the strongest thread if a source has several). Never paste a bare URL, never put a URL on its own line, never use square brackets except as part of a `[label](url)` link. Exactly this shape:
 
 ```
 1. **Crew** — shared workspace where humans and multiple AI agents work together ([Reddit](https://www.reddit.com/r/...), [GitHub](https://github.com/JamelHammoud/crew))
