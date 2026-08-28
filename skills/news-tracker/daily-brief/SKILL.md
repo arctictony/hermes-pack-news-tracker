@@ -73,20 +73,29 @@ This reads the store and emits the day's new findings per topic: title, source, 
 
 If it reports nothing new for any topic, skip to step 4 with the quiet-day format.
 
-## 2b. X lane (only if Composio tools are present and X is connected)
+## 2b. X lane
 
-Composio arrives as an MCP server with a host-specific prefix; look for `COMPOSIO_MANAGE_CONNECTIONS` / `COMPOSIO_MULTI_EXECUTE_TOOL` or direct `TWITTER_*` tools. If they exist and the connections manager shows a `twitter` connection, run this per enabled topic; otherwise skip the lane silently. Never start a connection from a scheduled run.
+Three routes, checked in this order. Use the first that applies; skip the lane silently if none does.
 
-1. Execute `TWITTER_RECENT_SEARCH` once per topic: `query` = the topic name plus its retune queries joined with OR, with `-is:retweet lang:en`; `max_results: 50`; `sort_order: "relevancy"`; `start_time` = 24 hours ago (UTC, `YYYY-MM-DDTHH:mm:ssZ`); `tweet_fields: ["public_metrics","created_at","author_id"]`; `expansions: ["author_id"]`. **One call per topic, never paginate.** Every post read costs money.
-2. If the member follows or owns X lists (`TWITTER_GET_USER_FOLLOWED_LISTS`, `TWITTER_GET_USER_OWNED_LISTS`), pull each list's timeline once (`TWITTER_LIST_POSTS_TIMELINE_BY_LIST_ID`, `max_results: 50`) and keep only posts that mention a tracked topic. Tag those `source: "x-list"`; they earn a "from people you follow" clause in the brief.
-3. Turn the results into a JSON list and write it to a file with the file tool, one object per post: `{"title": "<first 100 chars of text>", "url": "https://x.com/<username>/status/<id>", "source": "x" or "x-list", "author": "@<username>", "text": "<text>", "engagement": <like_count + 2*retweet_count + quote_count>, "published": "<created_at>"}`. Then:
-   ```bash
-   bash "$TRACKER" ingest "<topic>" <path-to-file.json>
-   ```
-   Ingest dedupes by URL against everything already stored, so a post you saw yesterday is not new today.
-4. Re-run `bash "$TRACKER" briefing generate` so the day's data includes X.
+**Route 1, direct (an X API bearer token is stored).** Check once:
+```bash
+bash "$TRACKER" check-x-bearer
+```
+If it says `ok`, run one pull per enabled topic. It searches the last 24 hours for the topic and its retune queries, caps at 50 posts, and writes the results straight into the store (deduped by URL):
+```bash
+bash "$TRACKER" x-pull "<topic>" 50 24
+```
+Then re-run `bash "$TRACKER" briefing generate`. Never call the X API yourself; the wrapper is the only thing that spends reads.
 
-Never post raw tweet text longer than one line; summarise and link. Engagement goes in the sentence ("2k likes") only when notable.
+**Route 2, Composio (no bearer, but Composio tools present and a `twitter` connection exists).** Look for `COMPOSIO_MANAGE_CONNECTIONS` / `COMPOSIO_MULTI_EXECUTE_TOOL` or direct `TWITTER_*` tools; never start a connection from a scheduled run.
+
+1. Execute `TWITTER_RECENT_SEARCH` once per topic: `query` = the topic name plus its retune queries joined with OR, with `-is:retweet lang:en`; `max_results: 50`; `sort_order: "relevancy"`; `start_time` = 24 hours ago (UTC, `YYYY-MM-DDTHH:mm:ssZ`); `tweet_fields: ["public_metrics","created_at","author_id"]`; `expansions: ["author_id"]`. One call per topic, never paginate.
+2. If the member follows or owns X lists (`TWITTER_GET_USER_FOLLOWED_LISTS`, `TWITTER_GET_USER_OWNED_LISTS`), pull each list's timeline once (`TWITTER_LIST_POSTS_TIMELINE_BY_LIST_ID`, `max_results: 50`) and keep only posts that mention a tracked topic. Tag those `source: "x-list"`; they earn a "from people you follow" clause.
+3. Write the results to a file with the file tool as a JSON list, one object per post: `{"title": "<first 100 chars>", "url": "https://x.com/<username>/status/<id>", "source": "x" or "x-list", "author": "@<username>", "text": "<text>", "engagement": <like_count + 2*retweet_count + quote_count>, "published": "<created_at>"}`, then `bash "$TRACKER" ingest "<topic>" <file>` and re-run `briefing generate`.
+
+**Route 3, none.** No bearer, no Composio connection: the brief carries no X items and says nothing about it.
+
+Never post raw tweet text longer than one line; summarise and link as `([X](url))` or `([@handle on X](url))`.
 
 ## 3. Podcast lane (only if Particle tools are available)
 

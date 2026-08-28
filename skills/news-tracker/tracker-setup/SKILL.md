@@ -137,7 +137,7 @@ At a pause, and only if the Particle tools are not already working (no `mcp_part
 
 ## Task 4: `x_coverage`
 
-At a later pause (never in the same breath as Task 3). Two routes; pick by what tools you have.
+At a later pause (never in the same breath as Task 3). First check `bash "$TRACKER" check-x-bearer`: if it says `ok`, X is already wired directly by the operator; say nothing, `onboarding done x_coverage`, memory "X: on (direct)". Otherwise two routes; pick by what tools you have.
 
 **Route A, Composio (Filament agents have this).** Composio arrives as an MCP server; the prefix varies by host, so look for tools whose names contain `COMPOSIO_MANAGE_CONNECTIONS`, `COMPOSIO_SEARCH_TOOLS`, `COMPOSIO_MULTI_EXECUTE_TOOL`, or direct toolkit tools such as `TWITTER_RECENT_SEARCH`. If any exist, X is a consent click, not a key:
 
@@ -185,6 +185,19 @@ Assume they have never created an API key. One step per message; wait for them t
    - `invalid` (only ever HTTP 401 or 403) → "That one didn't work. Usually a character got missed when copying. Can you paste it once more?" Twice, then suggest creating a new key.
    - `unreachable` → "I can't reach Particle right now. The key is saved; I'll check it again on the next run."
    - Anything else the wrapper reports (`unexpected`, another status) is **not** a bad key: the key is saved and authentication passed. Say "Saved. I'll confirm it on the first podcast run." and mark the task done. Never ask them to re-paste on a non-401.
+
+## Direct X (operator only)
+
+Not offered to members. If the person running this agent says "add X bearer <token>" or "here's the X API token", in a private conversation only:
+
+```bash
+bash "$TRACKER" set-x-bearer <token>
+bash "$TRACKER" check-x-bearer
+```
+
+Report the one-word result in plain words, never the token. `ok` → `onboarding done x_coverage`, memory "X: on (direct)". `blocked` → the X developer app needs pay-per-use credit loaded and must sit inside a Project; say so.
+
+"Pull X for <topic>" → `bash "$TRACKER" x-pull "<topic>" 50 24`, then `bash "$TRACKER" briefing generate` and report that topic's X items with links.
 
 ## Getting an xAI key (hand-holding)
 

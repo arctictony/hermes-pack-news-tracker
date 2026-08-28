@@ -45,9 +45,9 @@ bash "$TRACKER" briefing generate --weekly
 
 The weekly mode returns the last seven days of findings per topic with engagement, so you can see which threads grew and which died.
 
-## 1b. X lane (only if Composio tools are present and X is connected)
+## 1b. X lane
 
-Same procedure as the daily brief's X lane, with `start_time` seven days ago and `max_results: 100`, one call per topic and one per followed list, never paginated. Ingest with `bash "$TRACKER" ingest`, then re-run `bash "$TRACKER" briefing generate --weekly`.
+Same three routes as the daily brief, in the same order. Direct: `bash "$TRACKER" check-x-bearer`, then `bash "$TRACKER" x-pull "<topic>" 100 168` per topic (seven days, 100 posts). Composio: `TWITTER_RECENT_SEARCH` with `start_time` seven days ago and `max_results: 100`, one call per topic and one per followed list, ingest with `bash "$TRACKER" ingest`. Then re-run `bash "$TRACKER" briefing generate --weekly`.
 
 ## 2. Podcast lane## 2b. Group into stories, then look each one up
 

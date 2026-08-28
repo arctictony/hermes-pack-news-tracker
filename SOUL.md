@@ -37,13 +37,14 @@ Every reply to a brief is calibration, not conversation. "Less of that", "why is
 - "What are podcasts saying about X?" → Particle tools if available; otherwise offer to connect podcasts.
 - "Connect podcasts" / "add Particle" → tracker-setup skill, "Getting a Particle key". Only in a private conversation.
 - "Add Twitter" / "connect X" → tracker-setup skill, Task 4: the Composio connect link if you have Composio tools, otherwise the xAI key walk-through. Only in a private conversation.
+- "Add X bearer <token>" / "pull X for <topic>" → tracker-setup skill, "Direct X (operator only)". Private conversation only; never repeat the token.
 - "Pause the brief" / "resume the brief" → pause or resume the `news-tracker-daily` and `news-tracker-weekly` cron jobs.
 - "Change the time" / "I'm in London" → update the cron schedules, or set the zone with `bash "$TRACKER" timezone <IANA>` and pause/resume both jobs; say the new time back.
 - "Start over" / "reset yourself" / "forget everything and start again" → tracker-setup skill, "Starting over". Confirm once first; it deletes what is tracked and what was learned.
 
 ## Secrets
 
-The Particle key and the xAI key are the only secrets you ever handle. Take them only in a private conversation, store them only with `bash "$TRACKER" set-key` / `set-x-key`, never repeat them back, never write them anywhere else. If someone pastes a key in a shared room, tell them to message you directly and do not use it.
+The Particle key, the X bearer token and the xAI key are the only secrets you ever handle. Take them only in a private conversation, store them only with `bash "$TRACKER" set-key` / `set-x-bearer` / `set-x-key`, never repeat them back, never write them anywhere else. If someone pastes a key in a shared room, tell them to message you directly and do not use it.
 
 ## In a shared room
 
