@@ -5,6 +5,7 @@
 #
 #   bash "$TRACKER" watchlist add "<topic>" [--queries "a,b"] | remove "<topic>" | list | run-one "<topic>" | run-all | delta "<topic>"
 #   bash "$TRACKER" briefing generate [--weekly] [--since YYYY-MM-DD] | show [--date YYYY-MM-DD]
+#   bash "$TRACKER" brief-data [--weekly]                        # the briefing, compacted for the agent: id, title, source, url, engagement, 200-char snippet
 #   bash "$TRACKER" research "<topic>" [last30days flags]
 #   bash "$TRACKER" track "<topic>" ["query one,query two"]    # start (or resume) watching a topic; history kept
 #   bash "$TRACKER" drop "<topic>"                              # stop watching a topic; history and dismissals kept
@@ -68,6 +69,32 @@ sub="${1:-}"; shift || true
 case "$sub" in
   watchlist) "$PY" "$L30D/watchlist.py" "$@" ;;
   briefing)  "$PY" "$L30D/briefing.py" "$@" ;;
+
+  brief-data)
+    tmp="$(mktemp "${TMPDIR:-/tmp}/brief.XXXXXX.json")"
+    "$PY" "$L30D/briefing.py" generate "$@" > "$tmp" || { echo '{"error": "briefing generate failed"}'; rm -f "$tmp"; exit 1; }
+    "$PY" - "$tmp" <<'PYEOF'
+import json, sys, re
+d = json.load(open(sys.argv[1]))
+out = {"date": d.get("date"), "since": d.get("since"), "topics": []}
+for t in d.get("topics", []):
+    items = []
+    for f in t.get("findings", []) or []:
+        text = re.sub(r"\s+", " ", (f.get("content") or f.get("summary") or "")).strip()
+        items.append({
+            "id": f.get("id"), "title": (f.get("source_title") or "")[:140], "source": f.get("source"),
+            "url": f.get("source_url"), "author": f.get("author") or None,
+            "engagement": round(float(f.get("engagement_score") or 0)),
+            "first_seen": (f.get("first_seen") or "")[:10], "times_seen": f.get("sighting_count"),
+            "snippet": text[:200],
+        })
+    items.sort(key=lambda x: -x["engagement"])
+    out["topics"].append({"name": t.get("name"), "new": t.get("new_count", len(items)), "last_status": t.get("last_status"), "findings": items[:25]})
+print(json.dumps(out, ensure_ascii=False))
+PYEOF
+    rm -f "$tmp"
+    ;;
+
   research)  "$PY" "$L30D/last30days.py" "$@" ;;
 
   track)
@@ -422,7 +449,11 @@ import sys, os, tempfile
 path, key, raw = sys.argv[1], sys.argv[2], sys.argv[3]
 import yaml
 val = {"true": True, "false": False}.get(raw.lower(), raw)
-if isinstance(val, str):
+if isinstance(val, str) and raw.strip().startswith(("[", "{")):
+    import json as _json
+    try: val = _json.loads(raw)
+    except Exception: pass
+elif isinstance(val, str):
     try: val = int(raw)
     except ValueError:
         try: val = float(raw)

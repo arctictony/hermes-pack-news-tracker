@@ -71,7 +71,7 @@ If you know something about them or the room, offer three guesses instead of a b
 ```bash
 bash "$TRACKER" track "<topic>"
 bash "$TRACKER" watchlist run-one "<topic>"
-bash "$TRACKER" briefing generate
+bash "$TRACKER" brief-data
 ```
 
 **Show five stories, then ask them to point.** Group findings into stories first (a Reddit thread about a project and the project's GitHub repo are one story; same name, same outbound link or near-identical titles). Pick the five highest-engagement *stories*, numbered, one line each. The sources **are** the links, written as markdown links in parentheses at the end of the line. Never paste a bare URL, never put a URL on its own line, never use square brackets except as part of a `[label](url)` link. Exactly this shape:
@@ -197,7 +197,7 @@ bash "$TRACKER" check-x-bearer
 
 Report the one-word result in plain words, never the token. `ok` → `onboarding done x_coverage`, memory "X: on (direct)". `blocked` → the X developer app needs pay-per-use credit loaded and must sit inside a Project; say so.
 
-"Pull X for <topic>" → `bash "$TRACKER" x-pull "<topic>" 50 24`, then `bash "$TRACKER" briefing generate` and report that topic's X items with links.
+"Pull X for <topic>" → `bash "$TRACKER" x-pull "<topic>" 50 24`, then `bash "$TRACKER" brief-data` and report that topic's X items with links.
 
 ## If podcasts stay off after the key is saved
 

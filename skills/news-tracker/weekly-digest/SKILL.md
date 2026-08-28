@@ -34,20 +34,20 @@ TRACKER="${HERMES_HOME:-$HOME/.hermes}/skills/news-tracker/bin/tracker"
 
 ## 0. Reactions and history are available to you
 
-You run in a fresh session, but this agent's history is all searchable. Before writing, `session_search` for reactions to the week's briefs (`tracker less OR drop OR "not that" OR "more on"`, last 7 days) and honour them. Only replies addressed to you or to your briefs count; nothing anyone else said in a room goes into a digest.
+You run in a fresh session, but this agent's history is all searchable. Before writing, `session_search` once, `limit=5`, for reactions to the week's briefs (`tracker less OR drop OR "not that" OR "more on"`, last 7 days) and honour them. Only replies addressed to you or to your briefs count; nothing anyone else said in a room goes into a digest.
 
 ## 1. Refresh and pull the week
 
 ```bash
 bash "$TRACKER" watchlist run-all
-bash "$TRACKER" briefing generate --weekly
+bash "$TRACKER" brief-data --weekly
 ```
 
 The weekly mode returns the last seven days of findings per topic with engagement, so you can see which threads grew and which died.
 
 ## 1b. X lane
 
-Same three routes as the daily brief, in the same order. Direct: `bash "$TRACKER" check-x-bearer`, then `bash "$TRACKER" x-pull "<topic>" 100 168` per topic (seven days, 100 posts). Composio: `TWITTER_RECENT_SEARCH` with `start_time` seven days ago and `max_results: 100`, one call per topic and one per followed list, ingest with `bash "$TRACKER" ingest`. Then re-run `bash "$TRACKER" briefing generate --weekly`.
+Same three routes as the daily brief, in the same order. Direct: `bash "$TRACKER" check-x-bearer`, then `bash "$TRACKER" x-pull "<topic>" 100 168` per topic (seven days, 100 posts). Composio: `TWITTER_RECENT_SEARCH` with `start_time` seven days ago and `max_results: 100`, one call per topic and one per followed list, ingest with `bash "$TRACKER" ingest`. Then re-run `bash "$TRACKER" brief-data --weekly`.
 
 ## 2. Podcast lane## 2b. Group into stories, then look each one up
 

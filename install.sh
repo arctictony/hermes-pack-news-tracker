@@ -130,6 +130,10 @@ PY
 }
 if grep -qs "mcp.particle.pro" "$HERMES_DIR/config.yaml"; then
   say "connector: Particle already configured"
+  bash "$HERMES_DIR/skills/news-tracker/bin/tracker" config-set mcp_servers.particle.tools.include '["particle_entity_resolve","particle_podcast_find_mentions","particle_podcast_search_transcripts","particle_podcast_get_episode"]' >/dev/null 2>&1 \
+    && bash "$HERMES_DIR/skills/news-tracker/bin/tracker" config-set mcp_servers.particle.tools.prompts false >/dev/null 2>&1 \
+    && bash "$HERMES_DIR/skills/news-tracker/bin/tracker" config-set mcp_servers.particle.tools.resources false >/dev/null 2>&1 \
+    && say "connector: Particle trimmed to the 4 tools the pack uses (applies at next restart)"
 elif command -v hermes >/dev/null && add_mcp_with_cli; then
   say "connector: Particle MCP added to config.yaml"
 elif add_mcp_with_python; then

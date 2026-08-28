@@ -18,6 +18,16 @@ mcp_servers:
       X-API-Key: "${PARTICLE_API_KEY}"
     timeout: 60
     connect_timeout: 20
+    # Only the four tools the pack uses. Every registered tool's schema goes into
+    # every prompt, so the other 22 are pure context cost (and temptation).
+    tools:
+      include:
+        - particle_entity_resolve
+        - particle_podcast_find_mentions
+        - particle_podcast_search_transcripts
+        - particle_podcast_get_episode
+      prompts: false
+      resources: false
 
 # The post-turn self-improvement review may propose new skills from a conversation.
 # Stage them for approval instead of letting them land silently: this agent's
