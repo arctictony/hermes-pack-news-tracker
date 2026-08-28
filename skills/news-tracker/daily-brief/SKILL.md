@@ -104,7 +104,7 @@ Tool names start with `mcp_particle_`. Use `particle_podcast_find_mentions` for 
 **Getting the link.** The mentions result gives you `episode_slug` and `start_seconds` but no link, and the MCP episode tool strips links too. So for every episode you cite, run:
 
 ```bash
-bash "$TRACKER" podcast-link <episode_slug> <start_seconds>
+bash "$TRACKER" podcast-link "<episode_slug>" <start_seconds> "<podcast_slug>" "<episode_title>"
 ```
 
 It returns `link` (the episode's YouTube video with a timestamp when the show is on YouTube, otherwise the publisher's episode audio) plus `show`, `episode` and `link_label`. Use `link` verbatim and label the link with `link_label`: `([YouTube](link))` or `([episode audio](link))`. If `link` is null, write "(no public link)". Never build a URL from a slug, an id or a show name; `particle.news/...`, `particle.pro/...`, `particle.news` itself and guessed publisher paths are fabrications and have already produced 404s. Never substitute a LinkedIn profile, a homepage or a search result for the episode.

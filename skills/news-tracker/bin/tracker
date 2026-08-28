@@ -12,7 +12,7 @@
 #   bash "$TRACKER" dismiss <finding_id> [<finding_id> ...]     # hide findings the user rejected
 #   bash "$TRACKER" history "<words>" [limit]                   # everything ever stored that matches: first seen, times seen, dismissed?
 #   bash "$TRACKER" ingest "<topic>" <file.json>                 # add findings the agent fetched itself (e.g. X via Composio) to the store
-#   bash "$TRACKER" podcast-link <episode_slug> [start_seconds]  # the citable link for a Particle episode (YouTube w/ timestamp if it has one, else the publisher's episode url)
+#   bash "$TRACKER" podcast-link <episode_slug> [start_seconds] [podcast_slug] [episode_title]  # the citable link for a Particle episode (YouTube w/ timestamp if it has one, else the publisher's episode url)
 #   bash "$TRACKER" set-key <particle_api_key>                  # store the Particle key in this profile's .env
 #   bash "$TRACKER" check-key                                   # verify the stored Particle key against the API
 #   bash "$TRACKER" sync-header                                 # copy the stored Particle key into the MCP header (no key in chat)
@@ -509,12 +509,35 @@ PYEOF
     ;;
 
   podcast-link)
-    slug="${1:-}"; at="${2:-}"
-    [ -n "$slug" ] || { echo "usage: tracker podcast-link <episode_slug> [start_seconds]"; exit 2; }
+    slug="${1:-}"; at="${2:-}"; pslug="${3:-}"; etitle="${4:-}"
+    [ -n "$slug" ] || { echo "usage: tracker podcast-link <episode_slug> [start_seconds] [podcast_slug] [episode_title]"; exit 2; }
     key="$(read_key)"; [ -n "$key" ] || { echo '{"error": "no PARTICLE_API_KEY"}'; exit 3; }
     raw="$(mktemp "${TMPDIR:-/tmp}/ep.XXXXXX.json")"
     code="$(curl -s -o "$raw" -w '%{http_code}' --max-time 20 -H "X-API-Key: $key" "https://api.particle.pro/v1/podcasts/episodes/$slug" || echo 000)"
-    if [ "$code" != "200" ]; then echo "{\"error\": \"Particle returned HTTP $code for episode slug $slug\"}"; rm -f "$raw"; exit 4; fi
+    if [ "$code" != "200" ] && [ -n "$pslug" ]; then
+      # Fallback: the slug did not resolve; find the episode by title inside the podcast's recent episodes.
+      list="$(mktemp "${TMPDIR:-/tmp}/eps.XXXXXX.json")"
+      lcode="$(curl -s -o "$list" -w '%{http_code}' --max-time 20 -H "X-API-Key: $key" "https://api.particle.pro/v1/podcasts/$pslug/episodes?limit=50" || echo 000)"
+      if [ "$lcode" = "200" ]; then
+        best="$("$PY" - "$list" "$slug" "$etitle" <<'PYEOF'
+import json, sys, difflib
+d = json.load(open(sys.argv[1])); eps = d.get("data", []); want_slug, want_title = sys.argv[2], sys.argv[3]
+def score(e):
+    s1 = difflib.SequenceMatcher(None, want_slug, e.get("slug","")).ratio()
+    s2 = difflib.SequenceMatcher(None, want_title.lower(), (e.get("title") or "").lower()).ratio() if want_title else 0
+    return max(s1, s2)
+if eps:
+    e = max(eps, key=score)
+    print(e["slug"] if score(e) >= 0.6 else "")
+PYEOF
+)"
+        if [ -n "$best" ]; then
+          code="$(curl -s -o "$raw" -w '%{http_code}' --max-time 20 -H "X-API-Key: $key" "https://api.particle.pro/v1/podcasts/episodes/$best" || echo 000)"
+        fi
+      fi
+      rm -f "$list"
+    fi
+    if [ "$code" != "200" ]; then echo "{\"link\": null, \"note\": \"no public link\", \"error\": \"could not resolve episode $slug (HTTP $code)\"}"; rm -f "$raw"; exit 0; fi
     "$PY" - "$raw" "$at" <<'PYEOF'
 import json, sys
 d = json.load(open(sys.argv[1])); e = d.get("data", d); at = sys.argv[2]
@@ -531,7 +554,7 @@ pod = e.get("podcast") or {}
 out = {
   "show": pod.get("title"), "episode": e.get("title"), "published": e.get("published_at"),
   "link": best, "link_label": label, "youtube": yt, "publisher_url": e.get("url"),
-  "start_seconds": t, "note": None if best else "no public link"
+  "start_seconds": t, "resolved_slug": e.get("slug"), "note": None if best else "no public link"
 }
 print(json.dumps(out))
 PYEOF

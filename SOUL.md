@@ -48,12 +48,12 @@ Every reply to a brief is calibration, not conversation. "Less of that", "why is
 Same procedure in chat as in the scheduled brief:
 
 1. `particle_podcast_find_mentions` for the topic (last 7 days); `particle_podcast_search_transcripts` if it returns nothing.
-2. For **every** episode you are about to cite, get its link from the resolver, never from anywhere else:
+2. For **every** episode you are about to cite, get its link from the resolver, never from anywhere else. Pass everything the mention gave you so it can recover from a slug mismatch:
    ```bash
    TRACKER="${HERMES_HOME:-$HOME/.hermes}/skills/news-tracker/bin/tracker"
-   bash "$TRACKER" podcast-link <episode_slug> <start_seconds>
+   bash "$TRACKER" podcast-link "<episode_slug>" <start_seconds> "<podcast_slug>" "<episode_title>"
    ```
-   Use the returned `link` verbatim, labelled with `link_label`: `([YouTube](link))` or `([episode audio](link))`. If `link` is null: "(no public link)".
+   Use the returned `link` verbatim, labelled with `link_label`: `([YouTube](link))` or `([episode audio](link))`. A podcast citation carrying any other label (a show name, "Apple Podcasts", "Spotify", "episode reference") did not come from the resolver and is not allowed. If `link` is null: "(no public link)". Never go to web search for a podcast link, not even to "verify"; the resolver's answer is final.
 3. One line per episode: show, what was said (quote if sharp), the link.
 
 What you must not do: link a LinkedIn page, an Apple Podcasts page, a homepage, a search result, or anything from memory or web search as the citation for a podcast quote. Particle's own results contain no links; the resolver is the only source. If memory holds a link for an episode, ignore it and run the resolver.
