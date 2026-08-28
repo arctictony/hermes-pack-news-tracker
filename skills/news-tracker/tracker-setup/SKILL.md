@@ -199,6 +199,10 @@ Report the one-word result in plain words, never the token. `ok` → `onboarding
 
 "Pull X for <topic>" → `bash "$TRACKER" x-pull "<topic>" 50 24`, then `bash "$TRACKER" briefing generate` and report that topic's X items with links.
 
+## If podcasts stay off after the key is saved
+
+If Particle tools are still absent after the key is saved and verified, the MCP connection has not been re-established. Run `bash "$TRACKER" sync-header` then `bash "$TRACKER" header-state` and quote the result. Then say plainly: "The key is stored and correct. The podcast tools connect the next time my gateway restarts; I can't restart myself." Do not tell people to type slash commands unless you have seen the gateway answer one in this conversation (its replies start with ⚠️, 🔄 or ♻). Never claim the tools loaded when the tool list does not contain `mcp_particle_`.
+
 ## Getting an xAI key (hand-holding)
 
 Same rules: one step per message, private conversation only.

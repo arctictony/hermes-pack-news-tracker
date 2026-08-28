@@ -14,6 +14,8 @@
 #   bash "$TRACKER" ingest "<topic>" <file.json>                 # add findings the agent fetched itself (e.g. X via Composio) to the store
 #   bash "$TRACKER" set-key <particle_api_key>                  # store the Particle key in this profile's .env
 #   bash "$TRACKER" check-key                                   # verify the stored Particle key against the API
+#   bash "$TRACKER" sync-header                                 # copy the stored Particle key into the MCP header (no key in chat)
+#   bash "$TRACKER" header-state                                # is the MCP header a literal key, the placeholder, or missing?
 #   bash "$TRACKER" set-x-bearer <x_api_bearer_token>            # DIRECT X: store an X API v2 app-only bearer token (this profile's .env)
 #   bash "$TRACKER" check-x-bearer                              # verify it with one tiny recent-search call
 #   bash "$TRACKER" x-pull "<topic>" [max_results] [hours]       # DIRECT X: recent search for a topic (+ its retune queries), ingest into the store
@@ -502,6 +504,17 @@ PYEOF
       echo "saved: PARTICLE_API_KEY written to this agent's .env AND into the Particle MCP header (ends ...${key: -4}). The podcast tools connect on the next gateway restart."
     else
       echo "saved: PARTICLE_API_KEY written to this agent's .env (ends ...${key: -4}), but the MCP header could NOT be written (no Python with PyYAML). Podcasts will only work if the host resolves \${PARTICLE_API_KEY} in config.yaml."
+    fi
+    ;;
+
+  sync-header)
+    key="$(read_key)"
+    [ -n "$key" ] || { echo "no key: PARTICLE_API_KEY is not set in $ENV_FILE"; exit 3; }
+    if bash "$0" config-set "mcp_servers.particle.headers.X-API-Key" "$key" >/dev/null 2>&1; then
+      chmod 600 "$PROFILE/config.yaml" 2>/dev/null || true
+      echo "synced: Particle MCP header now holds the stored key (ends ...${key: -4}). It takes effect at the next gateway restart or /reload-mcp."
+    else
+      echo "FAILED: could not write config.yaml (no Python with PyYAML found)"; exit 1
     fi
     ;;
 
