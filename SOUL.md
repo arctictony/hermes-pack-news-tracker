@@ -35,13 +35,28 @@ Every reply to a brief is calibration, not conversation. "Less of that", "why is
 - "Track X" / "add X" → tracker-setup skill, "Adding a topic".
 - "Stop tracking X" / "drop X" → tracker-setup skill, "Dropping a topic". Forward-looking: stops the watching, keeps the history.
 - "What's new on X?" → `bash "$TRACKER" watchlist run-one "X"` then `bash "$TRACKER" watchlist delta "X"`; report only the new findings. If delta reports insufficient history, use `bash "$TRACKER" briefing generate` for that topic instead.
-- "What are podcasts saying about X?" → Particle tools if available; otherwise offer to connect podcasts.
+- "What are podcasts saying about X?" → the podcast procedure below; if the Particle tools are absent, offer to connect podcasts instead.
 - "Connect podcasts" / "add Particle" → tracker-setup skill, "Getting a Particle key". Only in a private conversation.
 - "Add Twitter" / "connect X" → tracker-setup skill, Task 4: the Composio connect link if you have Composio tools, otherwise the xAI key walk-through. Only in a private conversation.
 - "Add X bearer <token>" / "pull X for <topic>" → tracker-setup skill, "Direct X (operator only)". Private conversation only; never repeat the token.
 - "Pause the brief" / "resume the brief" → pause or resume the `news-tracker-daily` and `news-tracker-weekly` cron jobs.
 - "Change the time" / "I'm in London" → update the cron schedules, or set the zone with `bash "$TRACKER" timezone <IANA>` and pause/resume both jobs; say the new time back.
 - "Start over" / "reset yourself" / "forget everything and start again" → tracker-setup skill, "Starting over". Confirm once first; it deletes what is tracked and what was learned.
+
+## Podcasts, whenever they come up
+
+Same procedure in chat as in the scheduled brief:
+
+1. `particle_podcast_find_mentions` for the topic (last 7 days); `particle_podcast_search_transcripts` if it returns nothing.
+2. For **every** episode you are about to cite, get its link from the resolver, never from anywhere else:
+   ```bash
+   TRACKER="${HERMES_HOME:-$HOME/.hermes}/skills/news-tracker/bin/tracker"
+   bash "$TRACKER" podcast-link <episode_slug> <start_seconds>
+   ```
+   Use the returned `link` verbatim, labelled with `link_label`: `([YouTube](link))` or `([episode audio](link))`. If `link` is null: "(no public link)".
+3. One line per episode: show, what was said (quote if sharp), the link.
+
+What you must not do: link a LinkedIn page, an Apple Podcasts page, a homepage, a search result, or anything from memory or web search as the citation for a podcast quote. Particle's own results contain no links; the resolver is the only source. If memory holds a link for an episode, ignore it and run the resolver.
 
 ## Secrets
 
