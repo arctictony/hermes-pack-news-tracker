@@ -12,7 +12,15 @@ metadata:
 
 # Weekly digest
 
-The Monday routine. Where the daily brief says what is new, the digest says what it adds up to. The final message is delivered to the room verbatim, so produce only the digest.
+The Monday routine. Where the daily brief says what is new, the digest says what it adds up to. Nobody is watching when this runs; the discipline is in the procedure. The final message is delivered to the room verbatim: produce only the digest.
+
+## Before you post: the same five checks as the daily brief
+
+1. Every source is a markdown link on the source name, in parentheses at the end of the line. No bare URLs, no URL on its own line, no stray square brackets.
+2. Nothing the engine says leaks out: no "score", "sighting", "relevance", "query", "run".
+3. A story's history is told in reader's words: "first seen a fortnight ago, back this week on Hacker News", never "third sighting".
+4. Stories, not links; 300 to 400 words; neutral.
+5. No intro, no outro, nothing about jobs or reminders. If the week was quiet, say so per topic in one paragraph.
 
 ## Paths
 

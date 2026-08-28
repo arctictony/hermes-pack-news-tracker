@@ -12,7 +12,32 @@ metadata:
 
 # Daily brief
 
-The scheduled daily routine. Runs Tuesday to Friday. The final message is delivered to the room verbatim, so produce only the brief.
+The scheduled daily routine, Tuesday to Friday. Nobody is watching when this runs, so the discipline has to be in the procedure. The final message is delivered to the room verbatim: produce only the brief.
+
+## The brief, and the five checks before you post it
+
+This is what you are producing. Read it first, and read it again before you post.
+
+```
+**Tracker · Thu 28 Aug**
+
+**multiplayer agents**
+• **Crew** — shipped shared workspaces for humans and agents; the launch thread is the most-discussed post in r/AI_Agents this week ([Reddit](https://…), [GitHub](https://…))
+• **FlowRoom** — now on Hacker News too, two days after the Reddit thread ([Hacker News](https://…))
+
+**popular shared agent skills**
+• **rework** — a review-follow-up skill with a public repo, picked up by three separate threads ([Reddit](https://…), [GitHub](https://…))
+
+Quiet: nothing new on <topic> today.
+```
+
+Before you post, check every line against these five. If a line fails, fix it or cut it.
+
+1. **Every source is a markdown link on the source name**, in parentheses at the end of the line: `([Reddit](url), [GitHub](url))`. No bare URLs. No URL on its own line. No square brackets that aren't part of a link. No "— Reddit" followed by an address.
+2. **Nothing the engine says leaks out.** Never "score", "engagement score", "sighting", "second sighting", "relevance", "query", "store", "run". Say what a reader would say: "the most-discussed post in r/X this week", "back on Hacker News".
+3. **A recurring story is out unless it moved.** If the history lookup shows a story was already in a brief, it earns a line only for a development, a new source or a clear jump in traction, and the line says what moved: "now on Hacker News too". If nothing moved, cut it. Never write "resurfaces" or "again" without saying what is new.
+4. **One line per story, stories not links.** Two to four per topic with news, one if that is all, never padding. Under 250 words.
+5. **The reader knows the run completed.** End with `Quiet: …` for any topic with nothing new. If nothing is new anywhere, the whole brief is one line: `**Tracker · Thu 28 Aug** — quiet day. Nothing new on <topics>.` No intro, no outro, no "here is your brief", nothing about jobs or reminders.
 
 ## Paths
 
@@ -63,7 +88,11 @@ Composio arrives as an MCP server with a host-specific prefix; look for `COMPOSI
 
 Never post raw tweet text longer than one line; summarise and link. Engagement goes in the sentence ("2k likes") only when notable.
 
-## 3. Podcast lane## 3b. Group links into stories, then look each one up
+## 3. Podcast lane (only if Particle tools are available)
+
+Tool names start with `mcp_particle_`. If you are unsure which tool searches transcripts, call `particle_catalog` first and pick the transcript or mention search. For each topic, search mentions from the last 7 days and keep at most two per topic: the show, the speaker if labelled, one sentence on what was said, and the episode link. Skip the lane silently if the tools are absent or return an auth error.
+
+## 3b. Group links into stories, then look each one up
 
 The store dedupes by URL, so the same story arrives more than once: a Reddit thread that links to a GitHub repo, the repo itself, and an HN post about it are three findings and one story. Cluster findings that are about the same product, project, person or event (same outbound link, same name in the title, near-identical titles). Count stories, not links.
 
@@ -84,42 +113,14 @@ One line per story, sources listed after it: "Crew: shared workspace for humans 
 
 ## 4. Write the brief
 
-Format, in chat-safe markdown:
+Use the format at the top of this skill, then run the five checks. Extra rules:
 
-```
-**Tracker · <Day D Mon>**
-
-**<Topic 1>**
-• **<Story>** — <what is new, one line> ([Reddit](url), [GitHub](url))
-• **<Story>** — <second item if it earns its place> ([Hacker News](url), [X](url))
-• **<Story>** — <from people you follow, if any> ([@handle on X](url))
-🎙 **<Show>** — <one-line takeaway> ([episode](url))
-
-**<Topic 2>**
-• ...
-
-Quiet: <topics with nothing new>, if any
-```
-
-Links: the sources are the links, as markdown `[label](url)` in parentheses at the end of the line. Never a bare URL, never a URL on its own line, never square brackets that aren't part of a link. Engagement, when notable, goes in the sentence ("top of r/startups this week"), not in the parentheses.
-
-Rules:
-
-- Two to four stories per topic that has news. One if that is all there is. Never pad.
-- A recurring story earns a line only when it has moved; say what moved and since when.
-- Lead each bullet with the fact, then the source. Quote when the quote is sharper than your summary.
-- Engagement in plain words ("top of r/startups", "1.2k likes"), only when it says something.
-- Under 250 words. If you are over, cut bullets, not words.
-- No intro, no outro, no "here is your brief".
-
-Quiet-day format, when nothing is new anywhere:
-
-```
-**Tracker · <Day D Mon>** — quiet day. Nothing new on <topics>.
-```
+- Lead each line with the fact, then the source. Quote when the quote is sharper than your summary.
+- Traction in plain words and only when it says something.
+- Podcast lines start with 🎙 and link the episode; "from people you follow" lines cite the handle: `([@handle on X](url))`.
 
 ## 5. Do not
 
 - Do not include findings you did not get from the store or the Particle tools.
 - Do not include anything said in the room. This brief is public sources only.
-- Do not ask questions in the brief. If something is broken (a source erroring, a missing key), add one line at the end: "Note: X source unavailable today."
+- Do not ask questions in the brief. If a source errored, one line at the end: "Note: Reddit was unavailable today." Do not mention lanes that are simply not connected (podcasts, X); that is not news.

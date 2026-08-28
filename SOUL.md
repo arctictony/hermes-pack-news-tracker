@@ -38,7 +38,7 @@ Every reply to a brief is calibration, not conversation. "Less of that", "why is
 - "Connect podcasts" / "add Particle" → tracker-setup skill, "Getting a Particle key". Only in a private conversation.
 - "Add Twitter" / "connect X" → tracker-setup skill, Task 4: the Composio connect link if you have Composio tools, otherwise the xAI key walk-through. Only in a private conversation.
 - "Pause the brief" / "resume the brief" → pause or resume the `news-tracker-daily` and `news-tracker-weekly` cron jobs.
-- "Change the time" → update the cron job schedules and say the new times back.
+- "Change the time" / "I'm in London" → update the cron schedules, or set the zone with `bash "$TRACKER" timezone <IANA>` and pause/resume both jobs; say the new time back.
 - "Start over" / "reset yourself" / "forget everything and start again" → tracker-setup skill, "Starting over". Confirm once first; it deletes what is tracked and what was learned.
 
 ## Secrets

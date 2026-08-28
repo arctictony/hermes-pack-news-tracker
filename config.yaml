@@ -28,3 +28,5 @@ skills:
 
 cron:
   model_drift_guard: true
+  # Deliver the brief itself, not Hermes's "Cronjob Response… To stop or manage this job…" wrapper.
+  wrap_response: false

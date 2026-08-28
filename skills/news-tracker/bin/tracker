@@ -18,6 +18,8 @@
 #   bash "$TRACKER" check-x-key                                 # verify the stored xAI key
 #   bash "$TRACKER" onboarding status|next                      # the onboarding checklist and what to pick up next
 #   bash "$TRACKER" onboarding done|skip|later <task> [days]    # mark a task done, declined, or snoozed
+#   bash "$TRACKER" timezone <IANA zone>                        # e.g. America/New_York; routines fire at 08:00 in this zone
+#   bash "$TRACKER" config-set <dotted.key> <value>             # write one config.yaml key (true/false/number/string)
 #   bash "$TRACKER" reset [--keys]                              # back to day zero: topics, findings, checklist gone, routines paused; --keys also forgets Particle/xAI keys
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -298,6 +300,48 @@ else:
 PYEOF
     ;;
 
+  timezone)
+    tz="${1:-}"
+    [ -n "$tz" ] || { echo "usage: tracker timezone <IANA zone, e.g. America/New_York>"; exit 2; }
+    "$PY" -c "import sys, zoneinfo; zoneinfo.ZoneInfo(sys.argv[1])" "$tz" 2>/dev/null || { echo "invalid: '$tz' is not an IANA timezone (try Europe/London, America/New_York, Asia/Tokyo)"; exit 2; }
+    bash "$0" config-set timezone "$tz" >/dev/null && echo "saved: timezone = $tz. Pause and resume the routines so their next run is recomputed in this zone."
+    ;;
+
+  config-set)
+    key="${1:-}"; val="${2:-}"
+    [ -n "$key" ] && [ -n "$val" ] || { echo "usage: tracker config-set <dotted.key> <value>"; exit 2; }
+    # Needs PyYAML. Hermes's own venv always has it; the research Python may not.
+    YPY=""
+    for c in "$HOME/.hermes/hermes-agent/venv/bin/python" "$PROFILE/hermes-agent/venv/bin/python" /opt/hermes/.venv/bin/python "$PY" python3; do
+      if [ -n "$c" ] && command -v "$c" >/dev/null 2>&1 && "$c" -c 'import yaml' >/dev/null 2>&1; then YPY="$c"; break; fi
+    done
+    [ -n "$YPY" ] || { echo "config-set: no Python with PyYAML found; edit $PROFILE/config.yaml by hand: $key: $val"; exit 1; }
+    "$YPY" - "$PROFILE/config.yaml" "$key" "$val" <<'PYEOF'
+import sys, os, tempfile
+path, key, raw = sys.argv[1], sys.argv[2], sys.argv[3]
+import yaml
+val = {"true": True, "false": False}.get(raw.lower(), raw)
+if isinstance(val, str):
+    try: val = int(raw)
+    except ValueError:
+        try: val = float(raw)
+        except ValueError: pass
+cfg = {}
+if os.path.exists(path):
+    with open(path) as f: cfg = yaml.safe_load(f) or {}
+node = cfg
+parts = key.split(".")
+for p in parts[:-1]:
+    if not isinstance(node.get(p), dict): node[p] = {}
+    node = node[p]
+node[parts[-1]] = val
+fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path) or ".", prefix=".config.", suffix=".yaml")
+with os.fdopen(fd, "w") as f: yaml.safe_dump(cfg, f, sort_keys=False)
+os.replace(tmp, path)
+print(f"set {key} = {val!r}")
+PYEOF
+    ;;
+
   reset)
     with_keys=0; [ "${1:-}" = "--keys" ] && with_keys=1
     ( cd "$L30D" && "$PY" - <<'PYEOF'
@@ -367,5 +411,5 @@ PYEOF
     esac
     ;;
 
-  *) echo "usage: tracker watchlist|briefing|research|track|drop|retune|dismiss|history|ingest|set-key|check-key|set-x-key|check-x-key|onboarding|reset ..."; exit 2 ;;
+  *) echo "usage: tracker watchlist|briefing|research|track|drop|retune|dismiss|history|ingest|set-key|check-key|set-x-key|check-x-key|onboarding|timezone|config-set|reset ..."; exit 2 ;;
 esac

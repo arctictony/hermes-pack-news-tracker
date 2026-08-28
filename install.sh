@@ -138,9 +138,13 @@ else
   say "connector: could not edit config.yaml automatically; add mcp_servers.particle by hand (see README)"
 fi
 
-# Stage agent-authored skill writes for approval (see config.yaml note in the pack).
+# Stage agent-authored skill writes for approval, and drop Hermes's cron header/footer
+# so the room gets the brief and not "Cronjob Response… To stop or manage this job…".
 if command -v hermes >/dev/null; then
   HERMES_HOME="$HERMES_DIR" hermes config set skills.write_approval true >/dev/null 2>&1 && say "skills: agent-authored skill writes now need approval"
+  HERMES_HOME="$HERMES_DIR" hermes config set cron.wrap_response false >/dev/null 2>&1 && say "cron: delivery wrapper off (clean briefs)"
+else
+  bash "$HERMES_DIR/skills/news-tracker/bin/tracker" config-set cron.wrap_response false >/dev/null 2>&1 && say "cron: delivery wrapper off (clean briefs)"
 fi
 
 if grep -qs '^PARTICLE_API_KEY=' "$HERMES_DIR/.env" || [ -n "${PARTICLE_API_KEY:-}" ]; then
