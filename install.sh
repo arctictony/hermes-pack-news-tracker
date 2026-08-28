@@ -159,6 +159,8 @@ if command -v hermes >/dev/null; then
 else
   bash "$HERMES_DIR/skills/news-tracker/bin/tracker" config-set cron.wrap_response false >/dev/null 2>&1 && say "cron: delivery wrapper off (clean briefs)"
 fi
+# Trim toolsets a tracker never needs (smaller prompt, fewer detours to the web). JSON list → config-set parses it.
+bash "$HERMES_DIR/skills/news-tracker/bin/tracker" config-set agent.disabled_toolsets '["browser","code_execution","vision","image_gen","tts","todo","delegation","computer_use","web"]' >/dev/null 2>&1 && say "toolsets: browser, code, vision, image, tts, todo, delegation, computer_use, web disabled for this agent"
 
 if grep -qs '^PARTICLE_API_KEY=' "$HERMES_DIR/.env" || [ -n "${PARTICLE_API_KEY:-}" ]; then
   # Put the literal key into the MCP header so the connection does not depend on env interpolation.

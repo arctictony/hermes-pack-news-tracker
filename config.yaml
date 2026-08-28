@@ -29,6 +29,22 @@ mcp_servers:
       prompts: false
       resources: false
 
+# A tracker does not browse, run code, look at images, speak, draw, delegate or drive a desktop.
+# Every enabled toolset puts its schemas into every prompt; these nine are dead weight here and
+# a standing invitation to answer from the web instead of the store. Terminal, file, skills,
+# memory, session_search, clarify, cronjob and the platform plugin stay.
+agent:
+  disabled_toolsets:
+    - browser
+    - code_execution
+    - vision
+    - image_gen
+    - tts
+    - todo
+    - delegation
+    - computer_use
+    - web
+
 # The post-turn self-improvement review may propose new skills from a conversation.
 # Stage them for approval instead of letting them land silently: this agent's
 # behaviour is the pack's skills, and an auto-minted skill from one chat has
