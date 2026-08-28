@@ -32,6 +32,9 @@ TRACKER="${HERMES_HOME:-$HOME/.hermes}/skills/news-tracker/bin/tracker"
 
 `HERMES_HOME` already points at this agent's own profile directory, so do not append a profile path. If `$TRACKER` is missing, locate it with `find "$HOME/.hermes" -path "*/skills/news-tracker/bin/tracker" | head -1`.
 
+**Command shape (this matters for speed).** Wrapper commands are typed exactly as shown: one command per line, nothing wrapped around them. Never put a wrapper call inside `if … then … fi`, a `for` loop, a subshell `( … )`, a function, or behind `$( … )`. Hermes's command scanner treats any grouped or dynamically selected executable as unresolvable, shows an approval prompt nobody can answer, and the command dies after 60 seconds. `TRACKER="…"` on its own line followed by `bash "$TRACKER" …` lines is fine; chaining two wrapper calls with `&&` is fine; conditionals are not. If you need to know whether the wrapper exists, just run it: a missing file is an error you can read.
+
+
 ## 0. Reactions and history are available to you
 
 You run in a fresh session, but this agent's history is all searchable. Before writing, `session_search` once, `limit=5`, for reactions to the week's briefs (`tracker less OR drop OR "not that" OR "more on"`, last 7 days) and honour them. Only replies addressed to you or to your briefs count; nothing anyone else said in a room goes into a digest.
