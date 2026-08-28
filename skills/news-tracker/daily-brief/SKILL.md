@@ -101,7 +101,13 @@ Never post raw tweet text longer than one line; summarise and link as `([X](url)
 
 Tool names start with `mcp_particle_`. Use `particle_podcast_find_mentions` for each topic (last 7 days); fall back to `particle_podcast_search_transcripts` if it returns nothing. Keep at most two per topic: the show, the speaker if labelled, one sentence on what was said, and the episode link.
 
-**The episode link is the `url` field of the episode object Particle returns, copied exactly.** If the mentions result carries only an episode id, call `particle_podcast_get_episode` and take its `url`. Never build a URL from a slug, an id or a show name; `particle.news/...`, `particle.pro/...` and guessed publisher paths are all fabrications and have already produced 404s. If an episode has no `url`, write the line with the show and episode title and "(no public link)" instead of a link. Never substitute a LinkedIn profile, a homepage or a search result for the episode.
+**Getting the link.** The mentions result gives you `episode_slug` and `start_seconds` but no link, and the MCP episode tool strips links too. So for every episode you cite, run:
+
+```bash
+bash "$TRACKER" podcast-link <episode_slug> <start_seconds>
+```
+
+It returns `link` (the episode's YouTube video with a timestamp when the show is on YouTube, otherwise the publisher's episode audio) plus `show`, `episode` and `link_label`. Use `link` verbatim and label the link with `link_label`: `([YouTube](link))` or `([episode audio](link))`. If `link` is null, write "(no public link)". Never build a URL from a slug, an id or a show name; `particle.news/...`, `particle.pro/...`, `particle.news` itself and guessed publisher paths are fabrications and have already produced 404s. Never substitute a LinkedIn profile, a homepage or a search result for the episode.
 
 Skip the lane silently if the tools are absent or return an auth error.
 

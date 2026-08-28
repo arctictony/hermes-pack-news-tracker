@@ -12,6 +12,7 @@
 #   bash "$TRACKER" dismiss <finding_id> [<finding_id> ...]     # hide findings the user rejected
 #   bash "$TRACKER" history "<words>" [limit]                   # everything ever stored that matches: first seen, times seen, dismissed?
 #   bash "$TRACKER" ingest "<topic>" <file.json>                 # add findings the agent fetched itself (e.g. X via Composio) to the store
+#   bash "$TRACKER" podcast-link <episode_slug> [start_seconds]  # the citable link for a Particle episode (YouTube w/ timestamp if it has one, else the publisher's episode url)
 #   bash "$TRACKER" set-key <particle_api_key>                  # store the Particle key in this profile's .env
 #   bash "$TRACKER" check-key                                   # verify the stored Particle key against the API
 #   bash "$TRACKER" sync-header                                 # copy the stored Particle key into the MCP header (no key in chat)
@@ -507,6 +508,36 @@ PYEOF
     fi
     ;;
 
+  podcast-link)
+    slug="${1:-}"; at="${2:-}"
+    [ -n "$slug" ] || { echo "usage: tracker podcast-link <episode_slug> [start_seconds]"; exit 2; }
+    key="$(read_key)"; [ -n "$key" ] || { echo '{"error": "no PARTICLE_API_KEY"}'; exit 3; }
+    raw="$(mktemp "${TMPDIR:-/tmp}/ep.XXXXXX.json")"
+    code="$(curl -s -o "$raw" -w '%{http_code}' --max-time 20 -H "X-API-Key: $key" "https://api.particle.pro/v1/podcasts/episodes/$slug" || echo 000)"
+    if [ "$code" != "200" ]; then echo "{\"error\": \"Particle returned HTTP $code for episode slug $slug\"}"; rm -f "$raw"; exit 4; fi
+    "$PY" - "$raw" "$at" <<'PYEOF'
+import json, sys
+d = json.load(open(sys.argv[1])); e = d.get("data", d); at = sys.argv[2]
+try: t = int(float(at)) if at else None
+except ValueError: t = None
+videos = e.get("videos") or []
+yt = next((v.get("url") for v in videos if v.get("platform") == "youtube" and v.get("url")), None)
+best, label = None, None
+if yt:
+    best = yt + (f"&t={t}s" if t is not None and "?" in yt else (f"?t={t}s" if t is not None else "")); label = "YouTube"
+elif e.get("url"):
+    best, label = e["url"], "episode audio"
+pod = e.get("podcast") or {}
+out = {
+  "show": pod.get("title"), "episode": e.get("title"), "published": e.get("published_at"),
+  "link": best, "link_label": label, "youtube": yt, "publisher_url": e.get("url"),
+  "start_seconds": t, "note": None if best else "no public link"
+}
+print(json.dumps(out))
+PYEOF
+    rm -f "$raw"
+    ;;
+
   sync-header)
     key="$(read_key)"
     [ -n "$key" ] || { echo "no key: PARTICLE_API_KEY is not set in $ENV_FILE"; exit 3; }
@@ -545,5 +576,5 @@ PYEOF
     esac
     ;;
 
-  *) echo "usage: tracker watchlist|briefing|research|track|drop|retune|dismiss|history|ingest|set-key|check-key|sync-header|header-state|set-x-bearer|check-x-bearer|x-pull|set-x-key|check-x-key|onboarding|timezone|config-set|reset ..."; exit 2 ;;
+  *) echo "usage: tracker watchlist|briefing|research|track|drop|retune|dismiss|history|ingest|podcast-link|set-key|check-key|sync-header|header-state|set-x-bearer|check-x-bearer|x-pull|set-x-key|check-x-key|onboarding|timezone|config-set|reset ..."; exit 2 ;;
 esac
