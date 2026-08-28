@@ -53,6 +53,21 @@ if [ -z "$PY" ]; then
 fi
 [ -n "$PY" ] || { echo "tracker: no Python 3.12+ found on PATH or via uv. Run the pack installer again; it installs one with uv."; exit 1; }
 
+# Per-agent isolation. The research engine hard-codes ~/.local/share/last30days (store, briefs),
+# ~/.config/last30days (its .env) and ~/Documents/Last30Days (reports). Several agents on one
+# machine are several Hermes profiles under one HOME, so left alone they would share one store:
+# one member's topics visible to another's agent. Every engine call therefore runs with HOME
+# pointed inside this profile. Nothing else in the wrapper uses the fake HOME.
+REAL_HOME="$HOME"
+NT_HOME="$PROFILE/news-tracker-home"
+NT_CFG="$NT_HOME/.config/last30days"
+mkdir -p "$NT_CFG" "$NT_HOME/.local/share/last30days" "$NT_HOME/reports" 2>/dev/null || true
+# First use on a machine that already has engine config (keys, SETUP_COMPLETE): seed from it once.
+if [ ! -f "$NT_CFG/.env" ] && [ -f "$REAL_HOME/.config/last30days/.env" ]; then
+  cp "$REAL_HOME/.config/last30days/.env" "$NT_CFG/.env" 2>/dev/null && chmod 600 "$NT_CFG/.env" 2>/dev/null || true
+fi
+epy() { HOME="$NT_HOME" LAST30DAYS_CONFIG_DIR="$NT_CFG" LAST30DAYS_MEMORY_DIR="$NT_HOME/reports" "$PY" "$@"; }
+
 read_x_bearer() {
   if [ -n "${X_BEARER_TOKEN:-}" ]; then printf '%s' "$X_BEARER_TOKEN"; return; fi
   [ -f "$ENV_FILE" ] || return 0
@@ -67,12 +82,12 @@ read_key() {
 
 sub="${1:-}"; shift || true
 case "$sub" in
-  watchlist) "$PY" "$L30D/watchlist.py" "$@" ;;
-  briefing)  "$PY" "$L30D/briefing.py" "$@" ;;
+  watchlist) epy "$L30D/watchlist.py" "$@" ;;
+  briefing)  epy "$L30D/briefing.py" "$@" ;;
 
   brief-data)
     tmp="$(mktemp "${TMPDIR:-/tmp}/brief.XXXXXX.json")"
-    "$PY" "$L30D/briefing.py" generate "$@" > "$tmp" || { echo '{"error": "briefing generate failed"}'; rm -f "$tmp"; exit 1; }
+    epy "$L30D/briefing.py" generate "$@" > "$tmp" || { echo '{"error": "briefing generate failed"}'; rm -f "$tmp"; exit 1; }
     "$PY" - "$tmp" <<'PYEOF'
 import json, sys, re
 d = json.load(open(sys.argv[1]))
@@ -95,12 +110,12 @@ PYEOF
     rm -f "$tmp"
     ;;
 
-  research)  "$PY" "$L30D/last30days.py" "$@" ;;
+  research)  epy "$L30D/last30days.py" "$@" ;;
 
   track)
     topic="${1:-}"; queries="${2:-}"
     [ -n "$topic" ] || { echo "usage: tracker track \"<topic>\" [\"query one,query two\"]"; exit 2; }
-    ( cd "$L30D" && "$PY" - "$topic" "$queries" <<'PYEOF'
+    ( cd "$L30D" && epy - "$topic" "$queries" <<'PYEOF'
 import sys, json, store
 topic, raw = sys.argv[1], sys.argv[2]
 queries = [q.strip() for q in raw.split(",") if q.strip()] or None
@@ -126,7 +141,7 @@ PYEOF
   drop)
     topic="${1:-}"
     [ -n "$topic" ] || { echo "usage: tracker drop \"<topic>\""; exit 2; }
-    ( cd "$L30D" && "$PY" - "$topic" <<'PYEOF'
+    ( cd "$L30D" && epy - "$topic" <<'PYEOF'
 import sys, json, store
 topic = sys.argv[1]
 t = store.get_topic(topic)
@@ -149,7 +164,7 @@ PYEOF
     [ -n "$topic" ] && [ -n "$queries" ] || { echo "usage: tracker retune \"<topic>\" \"query one,query two\""; exit 2; }
     # Update the topic's search queries in place. Never remove+add: remove_topic deletes the
     # topic's findings, which would wipe history and every dismissal.
-    ( cd "$L30D" && "$PY" - "$topic" "$queries" <<'PYEOF'
+    ( cd "$L30D" && epy - "$topic" "$queries" <<'PYEOF'
 import sys, json, store
 topic, raw = sys.argv[1], sys.argv[2]
 queries = [q.strip() for q in raw.split(",") if q.strip()]
@@ -170,7 +185,7 @@ PYEOF
 
   dismiss)
     [ "$#" -ge 1 ] || { echo "usage: tracker dismiss <finding_id> [...]"; exit 2; }
-    ( cd "$L30D" && "$PY" - "$@" <<'PYEOF'
+    ( cd "$L30D" && epy - "$@" <<'PYEOF'
 import sys, store
 n = 0
 for arg in sys.argv[1:]:
@@ -186,7 +201,7 @@ PYEOF
   ingest)
     topic="${1:-}"; file="${2:-}"
     [ -n "$topic" ] && [ -f "$file" ] || { echo "usage: tracker ingest \"<topic>\" <file.json>  (JSON list of {title,url,source,author,text,engagement,published})"; exit 2; }
-    ( cd "$L30D" && "$PY" - "$topic" "$file" <<'PYEOF'
+    ( cd "$L30D" && epy - "$topic" "$file" <<'PYEOF'
 import sys, json, store
 topic, path = sys.argv[1], sys.argv[2]
 items = json.load(open(path))
@@ -219,7 +234,7 @@ PYEOF
   history)
     q="${1:-}"; lim="${2:-10}"
     [ -n "$q" ] || { echo "usage: tracker history \"<words>\" [limit]"; exit 2; }
-    ( cd "$L30D" && "$PY" - "$q" "$lim" <<'PYEOF'
+    ( cd "$L30D" && epy - "$q" "$lim" <<'PYEOF'
 import sys, json, store
 q, lim = sys.argv[1], int(sys.argv[2])
 try:
@@ -273,7 +288,7 @@ PYEOF
     [ -n "$tok" ] || { echo '{"error": "no X_BEARER_TOKEN; run set-x-bearer first"}'; exit 3; }
     raw="$(mktemp "${TMPDIR:-/tmp}/x-raw.XXXXXX.json")"; items="$(mktemp "${TMPDIR:-/tmp}/x-items.XXXXXX.json")"
     # Build the query from the topic and its retune queries; the store knows both.
-    q="$( cd "$L30D" && "$PY" - "$topic" <<'PYEOF'
+    q="$( cd "$L30D" && epy - "$topic" <<'PYEOF'
 import sys, json, store, urllib.parse
 topic = sys.argv[1]
 t = store.get_topic(topic) or {}
@@ -326,7 +341,7 @@ PYEOF
       *) echo "that does not look like an xAI key (they start with xai-); nothing saved"; exit 2 ;;
     esac
     # The research engine reads its own config file, not Hermes's .env.
-    cfg_dir="$HOME/.config/last30days"; cfg="$cfg_dir/.env"
+    cfg_dir="$NT_CFG"; cfg="$cfg_dir/.env"
     mkdir -p "$cfg_dir"; touch "$cfg"
     tmp="$(mktemp "$cfg_dir/.env.XXXXXX")"
     grep -v '^XAI_API_KEY=' "$cfg" > "$tmp" || true
@@ -337,7 +352,7 @@ PYEOF
 
   check-x-key)
     key="${XAI_API_KEY:-}"
-    [ -n "$key" ] || key="$(sed -n 's/^XAI_API_KEY=//p' "$HOME/.config/last30days/.env" 2>/dev/null | tail -1 | tr -d '"'"'"' ')"
+    [ -n "$key" ] || key="$(sed -n 's/^XAI_API_KEY=//p' "$NT_CFG/.env" 2>/dev/null | tail -1 | tr -d '"'"'"' ')"
     [ -n "$key" ] || { echo "no key: XAI_API_KEY is not set"; exit 3; }
     code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "Authorization: Bearer $key" 'https://api.x.ai/v1/models' || echo 000)"
     case "$code" in
@@ -352,7 +367,7 @@ PYEOF
     action="${1:-status}"; task="${2:-}"; days="${3:-3}"
     # Reality checks, so the checklist can never contradict what is actually configured
     # (state file is new in 0.4.0; agents set up before it must not be asked again).
-    has_topic=0; "$PY" "$L30D/watchlist.py" list 2>/dev/null | grep -q '"enabled": 1' && has_topic=1
+    has_topic=0; epy "$L30D/watchlist.py" list 2>/dev/null | grep -q '"enabled": 1' && has_topic=1
     routines_on=0; jobs="$PROFILE/cron/jobs.json"
     if [ -f "$jobs" ]; then
       "$PY" - "$jobs" <<'PYEOF' && routines_on=1
@@ -363,7 +378,7 @@ sys.exit(0 if ok else 1)
 PYEOF
     fi
     has_particle=0; [ -n "$(read_key)" ] && has_particle=1
-    has_x=0; { [ -n "${XAI_API_KEY:-}" ] || grep -qs '^XAI_API_KEY=' "$HOME/.config/last30days/.env" || [ -n "$(read_x_bearer)" ]; } && has_x=1
+    has_x=0; { [ -n "${XAI_API_KEY:-}" ] || grep -qs '^XAI_API_KEY=' "$NT_CFG/.env" || [ -n "$(read_x_bearer)" ]; } && has_x=1
     "$PY" - "$PROFILE/news-tracker.onboarding.json" "$action" "$task" "$days" "$has_topic" "$routines_on" "$has_particle" "$has_x" <<'PYEOF'
 import sys, json, os, datetime
 path, action, task, days = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
@@ -476,7 +491,7 @@ PYEOF
 
   reset)
     with_keys=0; [ "${1:-}" = "--keys" ] && with_keys=1
-    ( cd "$L30D" && "$PY" - <<'PYEOF'
+    ( cd "$L30D" && epy - <<'PYEOF'
 import json, store
 names = [t["name"] for t in store.list_topics()]
 for n in names:
@@ -507,9 +522,9 @@ PYEOF
         tmp="$(mktemp "$PROFILE/.env.XXXXXX")"; grep -v '^PARTICLE_API_KEY=\|^X_BEARER_TOKEN=' "$ENV_FILE" > "$tmp" || true; mv "$tmp" "$ENV_FILE"; chmod 600 "$ENV_FILE"
         bash "$0" config-set "mcp_servers.particle.headers.X-API-Key" '${PARTICLE_API_KEY}' >/dev/null 2>&1 || true
       fi
-      cfg="$HOME/.config/last30days/.env"
+      cfg="$NT_CFG/.env"
       if [ -f "$cfg" ]; then
-        tmp="$(mktemp "$HOME/.config/last30days/.env.XXXXXX")"; grep -v '^XAI_API_KEY=' "$cfg" > "$tmp" || true; mv "$tmp" "$cfg"; chmod 600 "$cfg"
+        tmp="$(mktemp "$NT_CFG/.env.XXXXXX")"; grep -v '^XAI_API_KEY=' "$cfg" > "$tmp" || true; mv "$tmp" "$cfg"; chmod 600 "$cfg"
       fi
       echo '{"keys_removed": ["PARTICLE_API_KEY", "XAI_API_KEY"]}'
     fi

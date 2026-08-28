@@ -100,6 +100,15 @@ os.replace(tmp, target)
 print("cron: " + (", ".join(added) + " added (paused)" if added else "jobs already present, nothing changed"))
 PY
 
+# 3b. Research store lives inside the profile from 0.8.2 (one store per agent). If this profile has
+#     none yet and the machine has the old shared one, copy it once so history is kept.
+NT_HOME="$HERMES_DIR/news-tracker-home"; OLD_DB="$HOME/.local/share/last30days/research.db"
+if [ ! -f "$NT_HOME/.local/share/last30days/research.db" ] && [ -f "$OLD_DB" ]; then
+  mkdir -p "$NT_HOME/.local/share/last30days"
+  cp "$OLD_DB" "$NT_HOME/.local/share/last30days/research.db" 2>/dev/null && say "store: copied the machine-level research store into this profile (one-time migration)"
+  [ -d "$HOME/.local/share/last30days/briefs" ] && cp -R "$HOME/.local/share/last30days/briefs" "$NT_HOME/.local/share/last30days/" 2>/dev/null || true
+fi
+
 # 4. Particle MCP server in config.yaml
 add_mcp_with_cli() {
   HERMES_HOME="$HERMES_DIR" hermes config set mcp_servers.particle.url "https://mcp.particle.pro" >/dev/null 2>&1 &&
