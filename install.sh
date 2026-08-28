@@ -150,8 +150,12 @@ fi
 if grep -qs '^PARTICLE_API_KEY=' "$HERMES_DIR/.env" || [ -n "${PARTICLE_API_KEY:-}" ]; then
   # Put the literal key into the MCP header so the connection does not depend on env interpolation.
   k="${PARTICLE_API_KEY:-$(sed -n 's/^PARTICLE_API_KEY=//p' "$HERMES_DIR/.env" | tail -1 | tr -d '"'"'"' ')}"
-  [ -n "$k" ] && bash "$HERMES_DIR/skills/news-tracker/bin/tracker" config-set "mcp_servers.particle.headers.X-API-Key" "$k" >/dev/null 2>&1 && chmod 600 "$HERMES_DIR/config.yaml" 2>/dev/null
-  say "connector: PARTICLE_API_KEY present, podcast lane on (header set; /reload-mcp or /restart to load the tools)"
+  if [ -n "$k" ] && bash "$HERMES_DIR/skills/news-tracker/bin/tracker" config-set "mcp_servers.particle.headers.X-API-Key" "$k" >/dev/null 2>&1; then
+    chmod 600 "$HERMES_DIR/config.yaml" 2>/dev/null
+    say "connector: PARTICLE_API_KEY present and written into the MCP header; podcasts connect on the next gateway restart"
+  else
+    say "connector: PARTICLE_API_KEY present but the MCP header could NOT be written (no Python with PyYAML found)"
+  fi
 else
   say "connector: no PARTICLE_API_KEY yet, podcast lane off until one is added to $HERMES_DIR/.env"
 fi

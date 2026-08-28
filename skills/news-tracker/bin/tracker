@@ -399,11 +399,21 @@ PYEOF
     key="${1:-}"; val="${2:-}"
     [ -n "$key" ] && [ -n "$val" ] || { echo "usage: tracker config-set <dotted.key> <value>"; exit 2; }
     # Needs PyYAML. Hermes's own venv always has it; the research Python may not.
+    # Candidates: the Hermes venv next to the hermes binary, the documented install dirs, then anything else.
+    HERMES_BIN="$(command -v hermes 2>/dev/null || true)"
+    HERMES_REAL=""; [ -n "$HERMES_BIN" ] && HERMES_REAL="$(readlink -f "$HERMES_BIN" 2>/dev/null || true)"
     YPY=""
-    for c in "$HOME/.hermes/hermes-agent/venv/bin/python" "$PROFILE/hermes-agent/venv/bin/python" /opt/hermes/.venv/bin/python "$PY" python3; do
-      if [ -n "$c" ] && command -v "$c" >/dev/null 2>&1 && "$c" -c 'import yaml' >/dev/null 2>&1; then YPY="$c"; break; fi
+    for c in \
+      "${HERMES_REAL:+$(dirname "$HERMES_REAL")/python}" \
+      "${HERMES_REAL:+$(dirname "$(dirname "$HERMES_REAL")")/venv/bin/python}" \
+      /usr/local/lib/hermes/hermes-agent/venv/bin/python /usr/local/lib/hermes-agent/venv/bin/python \
+      "$HOME/.hermes/hermes-agent/venv/bin/python" "$PROFILE/hermes-agent/venv/bin/python" /opt/hermes/.venv/bin/python \
+      "$PY" python3; do
+      if [ -n "$c" ] && [ -x "$c" ] 2>/dev/null || { [ -n "$c" ] && command -v "$c" >/dev/null 2>&1; }; then
+        if "$c" -c 'import yaml' >/dev/null 2>&1; then YPY="$c"; break; fi
+      fi
     done
-    [ -n "$YPY" ] || { echo "config-set: no Python with PyYAML found; edit $PROFILE/config.yaml by hand: $key: $val"; exit 1; }
+    [ -n "$YPY" ] || { echo "config-set: FAILED, no Python with PyYAML found; edit $PROFILE/config.yaml by hand: $key: $val"; exit 1; }
     "$YPY" - "$PROFILE/config.yaml" "$key" "$val" <<'PYEOF'
 import sys, os, tempfile
 path, key, raw = sys.argv[1], sys.argv[2], sys.argv[3]
@@ -487,9 +497,22 @@ PYEOF
     # Also write the key straight into the MCP header. The ${PARTICLE_API_KEY} placeholder
     # depends on the running process having loaded .env and on the Hermes build supporting
     # interpolation; a literal header works everywhere and survives /reload-mcp.
-    bash "$0" config-set "mcp_servers.particle.headers.X-API-Key" "$key" >/dev/null 2>&1 || true
-    chmod 600 "$PROFILE/config.yaml" 2>/dev/null || true
-    echo "saved: PARTICLE_API_KEY written to this agent's .env and Particle MCP header (ends ...${key: -4}). Run /reload-mcp (or /restart) to load the podcast tools."
+    if bash "$0" config-set "mcp_servers.particle.headers.X-API-Key" "$key" >/dev/null 2>&1; then
+      chmod 600 "$PROFILE/config.yaml" 2>/dev/null || true
+      echo "saved: PARTICLE_API_KEY written to this agent's .env AND into the Particle MCP header (ends ...${key: -4}). The podcast tools connect on the next gateway restart."
+    else
+      echo "saved: PARTICLE_API_KEY written to this agent's .env (ends ...${key: -4}), but the MCP header could NOT be written (no Python with PyYAML). Podcasts will only work if the host resolves \${PARTICLE_API_KEY} in config.yaml."
+    fi
+    ;;
+
+  header-state)
+    line="$(grep -n 'X-API-Key' "$PROFILE/config.yaml" 2>/dev/null | head -1)"
+    case "$line" in
+      "") echo "header: missing (no Particle MCP header in config.yaml)";;
+      *'${PARTICLE_API_KEY}'*) echo "header: placeholder (\${PARTICLE_API_KEY}); relies on the host resolving env vars";;
+      *pp_*|*pk_*) echo "header: literal key present (ends ...$(printf '%s' "$line" | sed -n 's/.*\(....\)$/\1/p'))";;
+      *) echo "header: set to an unexpected value";;
+    esac
     ;;
 
   check-key)
