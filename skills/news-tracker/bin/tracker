@@ -545,5 +545,5 @@ PYEOF
     esac
     ;;
 
-  *) echo "usage: tracker watchlist|briefing|research|track|drop|retune|dismiss|history|ingest|set-key|check-key|set-x-bearer|check-x-bearer|x-pull|set-x-key|check-x-key|onboarding|timezone|config-set|reset ..."; exit 2 ;;
+  *) echo "usage: tracker watchlist|briefing|research|track|drop|retune|dismiss|history|ingest|set-key|check-key|sync-header|header-state|set-x-bearer|check-x-bearer|x-pull|set-x-key|check-x-key|onboarding|timezone|config-set|reset ..."; exit 2 ;;
 esac
