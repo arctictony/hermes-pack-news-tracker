@@ -16,7 +16,7 @@ The Monday routine. Where the daily brief says what is new, the digest says what
 
 ## Before you post: the same five checks as the daily brief
 
-1. Every source is a markdown link on the source name, in parentheses at the end of the line. No bare URLs, no URL on its own line, no stray square brackets.
+1. Every source is a markdown link on the source name, in parentheses at the end of the line. No bare URLs, no URL on its own line, no stray square brackets. Every URL was returned by a tool, verbatim; never composed or guessed. No URL → "(no public link)".
 2. Nothing the engine says leaks out: no "score", "sighting", "relevance", "query", "run".
 3. A story's history is told in reader's words: "first seen a fortnight ago, back this week on Hacker News", never "third sighting".
 4. Stories, not links; 300 to 400 words; neutral.

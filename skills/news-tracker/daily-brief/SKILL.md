@@ -33,7 +33,7 @@ Quiet: nothing new on <topic> today.
 
 Before you post, check every line against these five. If a line fails, fix it or cut it.
 
-1. **Every source is a markdown link on the source name**, in parentheses at the end of the line: `([Reddit](url), [GitHub](url))`. No bare URLs. No URL on its own line. No square brackets that aren't part of a link. No "— Reddit" followed by an address.
+1. **Every source is a markdown link on the source name**, in parentheses at the end of the line: `([Reddit](url), [GitHub](url))`. No bare URLs. No URL on its own line. No square brackets that aren't part of a link. No "— Reddit" followed by an address. **Every URL was returned by a tool, character for character.** You never compose, guess or "fix" a URL. If you have no URL for a claim, the line says "(no public link)".
 2. **Nothing the engine says leaks out.** Never "score", "engagement score", "sighting", "second sighting", "relevance", "query", "store", "run". Say what a reader would say: "the most-discussed post in r/X this week", "back on Hacker News".
 3. **A recurring story is out unless it moved.** If the history lookup shows a story was already in a brief, it earns a line only for a development, a new source or a clear jump in traction, and the line says what moved: "now on Hacker News too". If nothing moved, cut it. Never write "resurfaces" or "again" without saying what is new.
 4. **One line per story, stories not links.** Two to four per topic with news, one if that is all, never padding. Under 250 words.
@@ -99,7 +99,11 @@ Never post raw tweet text longer than one line; summarise and link as `([X](url)
 
 ## 3. Podcast lane (only if Particle tools are available)
 
-Tool names start with `mcp_particle_`. Use `particle_podcast_find_mentions` for each topic (last 7 days); fall back to `particle_podcast_search_transcripts` if it returns nothing. Keep at most two per topic: the show, the speaker if labelled, one sentence on what was said, and the episode link. Skip the lane silently if the tools are absent or return an auth error.
+Tool names start with `mcp_particle_`. Use `particle_podcast_find_mentions` for each topic (last 7 days); fall back to `particle_podcast_search_transcripts` if it returns nothing. Keep at most two per topic: the show, the speaker if labelled, one sentence on what was said, and the episode link.
+
+**The episode link is the `url` field of the episode object Particle returns, copied exactly.** If the mentions result carries only an episode id, call `particle_podcast_get_episode` and take its `url`. Never build a URL from a slug, an id or a show name; `particle.news/...`, `particle.pro/...` and guessed publisher paths are all fabrications and have already produced 404s. If an episode has no `url`, write the line with the show and episode title and "(no public link)" instead of a link. Never substitute a LinkedIn profile, a homepage or a search result for the episode.
+
+Skip the lane silently if the tools are absent or return an auth error.
 
 ## 3b. Group links into stories, then look each one up
 
