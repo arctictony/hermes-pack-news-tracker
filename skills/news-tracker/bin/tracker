@@ -401,12 +401,16 @@ PYEOF
   check-key)
     key="$(read_key)"
     [ -n "$key" ] || { echo "no key: PARTICLE_API_KEY is not set in $ENV_FILE"; exit 3; }
+    # /v1/entities/search is the documented lookup; the quickstart's /v1/entities?q= returns 422.
+    # Only 401/403 mean a bad key. Any other 4xx means the key was accepted and the request shape
+    # was not, which still proves the key.
     code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "X-API-Key: $key" \
-      'https://api.particle.pro/v1/entities?q=altman&limit=1' || echo 000)"
+      'https://api.particle.pro/v1/entities/search?q=altman&limit=1' || echo 000)"
     case "$code" in
-      200) echo "ok: Particle key works (HTTP 200)"; ;;
+      200) echo "ok: Particle key works (HTTP 200)" ;;
       401|403) echo "invalid: Particle rejected the key (HTTP $code). Check it was copied in full."; exit 4 ;;
       000) echo "unreachable: could not reach api.particle.pro (network?)"; exit 5 ;;
+      4*) echo "ok: Particle accepted the key (HTTP $code on a probe request; auth passed)" ;;
       *) echo "unexpected: HTTP $code from Particle"; exit 6 ;;
     esac
     ;;

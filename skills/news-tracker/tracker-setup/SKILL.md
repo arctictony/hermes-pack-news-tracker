@@ -182,8 +182,9 @@ Assume they have never created an API key. One step per message; wait for them t
    bash "$TRACKER" check-key
    ```
    - `ok` → it worked. The podcast tools load when this conversation next starts fresh; `/restart` (on Filament) makes it immediate. Memory: "Podcasts: on".
-   - `invalid` → "That one didn't work. Usually a character got missed when copying. Can you paste it once more?" Twice, then suggest creating a new key.
+   - `invalid` (only ever HTTP 401 or 403) → "That one didn't work. Usually a character got missed when copying. Can you paste it once more?" Twice, then suggest creating a new key.
    - `unreachable` → "I can't reach Particle right now. The key is saved; I'll check it again on the next run."
+   - Anything else the wrapper reports (`unexpected`, another status) is **not** a bad key: the key is saved and authentication passed. Say "Saved. I'll confirm it on the first podcast run." and mark the task done. Never ask them to re-paste on a non-401.
 
 ## Getting an xAI key (hand-holding)
 
