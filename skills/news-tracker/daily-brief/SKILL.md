@@ -99,7 +99,7 @@ Never post raw tweet text longer than one line; summarise and link as `([X](url)
 
 ## 3. Podcast lane (only if Particle tools are available)
 
-Tool names start with `mcp_particle_`. If you are unsure which tool searches transcripts, call `particle_catalog` first and pick the transcript or mention search. For each topic, search mentions from the last 7 days and keep at most two per topic: the show, the speaker if labelled, one sentence on what was said, and the episode link. Skip the lane silently if the tools are absent or return an auth error.
+Tool names start with `mcp_particle_`. Use `particle_podcast_find_mentions` for each topic (last 7 days); fall back to `particle_podcast_search_transcripts` if it returns nothing. Keep at most two per topic: the show, the speaker if labelled, one sentence on what was said, and the episode link. Skip the lane silently if the tools are absent or return an auth error.
 
 ## 3b. Group links into stories, then look each one up
 
