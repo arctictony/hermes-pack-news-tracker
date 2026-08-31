@@ -52,7 +52,19 @@ The weekly mode returns the last seven days of findings per topic with engagemen
 
 Same three routes as the daily brief, in the same order. Direct: `bash "$TRACKER" check-x-bearer`, then `bash "$TRACKER" x-pull "<topic>" 100 168` per topic (seven days, 100 posts). Composio: `TWITTER_RECENT_SEARCH` with `start_time` seven days ago and `max_results: 100`, one call per topic and one per followed list, ingest with `bash "$TRACKER" ingest`. Then re-run `bash "$TRACKER" brief-data --weekly`.
 
-## 2. Podcast lane## 2b. Group into stories, then look each one up
+## 2. Podcast lane (only if Particle tools are available)
+
+For each topic, `particle_podcast_find_mentions` over the last 7 days, limit 5, never paginate (`particle_podcast_search_transcripts`, limit 5, as fallback). For **every** episode you cite, get the link from the resolver and nowhere else:
+
+```bash
+bash "$TRACKER" podcast-link "<episode_slug>" <start_seconds> "<podcast_slug>" "<episode_title>"
+```
+
+Use `link` verbatim, labelled with `link_label`: `([YouTube](link))` or `([episode audio](link))`. `link` null → "(no public link)". Never build or web-search a podcast URL.
+
+**Show quality.** `podcast-link` also returns `show_profile` and `show_popularity`. `"ai-daily-short"` marks the machine-narrated daily news shorts (solo narrator, five-plus episodes a week, minutes long) that flood podcast search. Run `podcast-link` for every candidate mention first, then pick: prefer `"regular"` shows and higher popularity. Cite an `ai-daily-short` only when no regular show covered the topic, at most one, and name what it is in the line ("a daily AI-news short"). Never let the podcast lane be only shorts without saying so.
+
+## 2b. Group into stories, then look each one up
 
 Same rule as the daily brief: a story with several sources is one story; count stories, not links; one link label per source. For each story in the digest, run `bash "$TRACKER" history "<distinctive words>"` and `session_search` for the same words. The digest's job is the arc: first seen when, how many times, what changed this week, what it connects to from earlier. A story that has run for three weeks reads differently from one that appeared on Thursday; say which.
 

@@ -40,6 +40,8 @@ Report only the new findings, grouped into stories, two to five lines, one link 
    bash "$TRACKER" podcast-link "<episode_slug>" <start_seconds> "<podcast_slug>" "<episode_title>"
    ```
    Use `link` verbatim, labelled with `link_label`: `([YouTube](link))` or `([episode audio](link))`. `link` null → "(no public link)". A podcast citation with any other label (a show name, Apple Podcasts, Spotify, "episode reference") did not come from the resolver and is not allowed. Never web-search for a podcast link, not even to verify; if memory holds a link for an episode, ignore it.
+**Show quality.** `podcast-link` also returns `show_profile` and `show_popularity`. `"ai-daily-short"` marks the machine-narrated daily news shorts (solo narrator, five-plus episodes a week, minutes long) that flood podcast search. Run `podcast-link` for every candidate mention first, then pick: prefer `"regular"` shows and higher popularity. Cite an `ai-daily-short` only when no regular show covered the topic, at most one, and name what it is in the line ("a daily AI-news short"). Never let the podcast lane be only shorts without saying so.
+
 3. One line per episode: show, what was said (quote if sharp), the link. At most five lines.
 
 ## "Pull X (Twitter) for <topic>"
