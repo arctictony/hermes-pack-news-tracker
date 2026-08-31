@@ -112,6 +112,9 @@ bash "$TRACKER" podcast-link "<episode_slug>" <start_seconds> "<podcast_slug>" "
 
 It returns `link` (the episode's YouTube video with a timestamp when the show is on YouTube, otherwise the publisher's episode audio) plus `show`, `episode` and `link_label`. Use `link` verbatim and label the link with `link_label`: `([YouTube](link))` or `([episode audio](link))`. If `link` is null, write "(no public link)". Never build a URL from a slug, an id or a show name; `particle.news/...`, `particle.pro/...`, `particle.news` itself and guessed publisher paths are fabrications and have already produced 404s. Never substitute a LinkedIn profile, a homepage or a search result for the episode.
 
+**Show quality.** `podcast-link` also returns `show_profile`. `"ai-daily-short"` marks the machine-narrated daily news shorts (a solo narrator, five-plus episodes a week, minutes long) that flood podcast search. Prefer episodes from `"regular"` shows: run `podcast-link` for every candidate mention first, then pick. Cite an `ai-daily-short` only when no regular show covered the topic, at most one, and name what it is in the line ("a daily AI-news short"). Never let the podcast lane be only shorts without saying so.
+
+
 Skip the lane silently if the tools are absent or return an auth error.
 
 ## 3b. Group links into stories, then look each one up

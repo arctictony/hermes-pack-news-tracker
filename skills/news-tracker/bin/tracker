@@ -584,7 +584,7 @@ PYEOF
       rm -f "$list"
     fi
     if [ "$code" != "200" ]; then echo "{\"link\": null, \"note\": \"no public link\", \"error\": \"could not resolve episode $slug (HTTP $code)\"}"; rm -f "$raw"; exit 0; fi
-    "$PY" - "$raw" "$at" <<'PYEOF'
+    NT_PARTICLE_KEY="$key" "$PY" - "$raw" "$at" <<'PYEOF'
 import json, sys
 d = json.load(open(sys.argv[1])); e = d.get("data", d); at = sys.argv[2]
 try: t = int(float(at)) if at else None
@@ -597,10 +597,39 @@ if yt:
 elif e.get("url"):
     best, label = e["url"], "episode audio"
 pod = e.get("podcast") or {}
+fmt = pod.get("format") or {}
+if not fmt and pod.get("slug"):
+    # The episode's embedded podcast object is compact; fetch the show for format + popularity.
+    import subprocess, os
+    key = os.environ.get("NT_PARTICLE_KEY", "")
+    try:
+        r = subprocess.run(["curl", "-s", "--max-time", "15", "-H", f"X-API-Key: {key}",
+                            f"https://api.particle.pro/v1/podcasts/{pod['slug']}"],
+                           capture_output=True, text=True, timeout=20)
+        show = json.loads(r.stdout); show = show.get("data", show)
+        fmt = show.get("format") or {}
+        pod["popularity"] = show.get("popularity")
+    except Exception:
+        fmt = {}
+mins = fmt.get("avg_episode_minutes"); epw = fmt.get("episodes_per_week"); sigs = fmt.get("signals") or []
+dur = e.get("duration_seconds")
+profile = "regular"
+try:
+    shortish = (mins is not None and float(mins) <= 12) or (dur is not None and float(dur) <= 720)
+    churny = epw is not None and float(epw) >= 3.5
+    narrated = "solo_narrated" in sigs and fmt.get("guest_frequency") in ("never", "rare")
+    if shortish and churny and narrated:
+        profile = "ai-daily-short"
+except Exception:
+    pass
 out = {
   "show": pod.get("title"), "episode": e.get("title"), "published": e.get("published_at"),
   "link": best, "link_label": label, "youtube": yt, "publisher_url": e.get("url"),
-  "start_seconds": t, "resolved_slug": e.get("slug"), "note": None if best else "no public link"
+  "start_seconds": t, "resolved_slug": e.get("slug"),
+  "show_profile": profile, "episode_minutes": round(dur/60) if dur else None,
+  "show_popularity": pod.get("popularity"),
+  "show_format": {"signals": sigs, "guest_frequency": fmt.get("guest_frequency"), "avg_episode_minutes": mins, "episodes_per_week": epw},
+  "note": None if best else "no public link"
 }
 print(json.dumps(out))
 PYEOF
