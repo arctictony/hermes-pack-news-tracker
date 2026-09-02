@@ -100,6 +100,31 @@ os.replace(tmp, target)
 print("cron: " + (", ".join(added) + " added (paused)" if added else "jobs already present, nothing changed"))
 PY
 
+# 3a2. Cron pre-check scripts must live in $HERMES_HOME/scripts/
+if [ -d "$PACK/scripts" ]; then
+  mkdir -p "$HERMES_DIR/scripts"
+  cp "$PACK/scripts/"*.sh "$HERMES_DIR/scripts/" 2>/dev/null && chmod +x "$HERMES_DIR/scripts/"*.sh 2>/dev/null
+  say "scripts: alert pre-check installed"
+fi
+
+# 3a3. Cadence migration: the default is now weekly + break-in alerts. If this agent was
+#      already onboarded with the daily brief enabled, move it to the new default once.
+python3 - "$HERMES_DIR/cron/jobs.json" <<'PYEOF' 2>/dev/null || true
+import json, sys, os, tempfile
+p = sys.argv[1]
+if not os.path.exists(p): raise SystemExit
+d = json.load(open(p)); jobs = d.get("jobs", [])
+by = {j.get("id"): j for j in jobs}
+daily, alerts, weekly = by.get("news-tracker-daily"), by.get("news-tracker-alerts"), by.get("news-tracker-weekly")
+if daily and alerts and daily.get("enabled") and not alerts.get("enabled") and not alerts.get("migrated"):
+    daily.update(enabled=False, state="paused", next_run_at=None, paused_reason="Replaced by weekly + alerts (0.9.0). Resume only if a daily brief is asked for.")
+    alerts.update(enabled=True, state="scheduled", next_run_at=None, migrated=True)
+    if weekly is not None and not weekly.get("enabled"):
+        weekly.update(enabled=True, state="scheduled", next_run_at=None)
+    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(p)); json.dump(d, os.fdopen(fd, "w"), indent=2); os.replace(tmp, p)
+    print("migrated: daily paused, alerts + weekly on")
+PYEOF
+
 # 3b. Research store lives inside the profile from 0.8.2 (one store per agent). If this profile has
 #     none yet and the machine has the old shared one, copy it once so history is kept.
 NT_HOME="$HERMES_DIR/news-tracker-home"; OLD_DB="$HOME/.local/share/last30days/research.db"

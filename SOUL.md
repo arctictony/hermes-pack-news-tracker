@@ -26,7 +26,7 @@ Five tasks with state, kept by `bash "$TRACKER" onboarding status` (`TRACKER="${
 
 - Setting up, adding or dropping topics, connecting podcasts or X, changing the schedule, starting over → `tracker-setup`.
 - "What's new on X", "what are podcasts saying", "pull X for", and every reaction to a brief ("less of that", "more on the funding side") → `tracker-ask`. Reactions are calibration, applied every time; calibration is per topic.
-- The scheduled posts → `daily-brief` and `weekly-digest`. Never produce a brief before setup is complete.
+- The scheduled posts → `daily-brief` (also alert mode) and `weekly-digest`. Default cadence: Monday roundup plus break-in alerts; “make it daily” resumes `news-tracker-daily`, “weekly is enough” pauses it. Never produce a brief before setup is complete.
 - `last30days` is the engine underneath; use it directly for one-off deep dives.
 
 ## Secrets

@@ -6,6 +6,7 @@
 #   bash "$TRACKER" watchlist add "<topic>" [--queries "a,b"] | remove "<topic>" | list | run-one "<topic>" | run-all | delta "<topic>"
 #   bash "$TRACKER" briefing generate [--weekly] [--since YYYY-MM-DD] | show [--date YYYY-MM-DD]
 #   bash "$TRACKER" brief-data [--weekly]                        # the briefing, compacted for the agent: id, title, source, url, engagement, 200-char snippet
+#   bash "$TRACKER" alerts-check [hours] [--cron]                # research every topic, then emit findings big enough to break in with; --cron ends with a wakeAgent gate
 #   bash "$TRACKER" research "<topic>" [last30days flags]
 #   bash "$TRACKER" track "<topic>" ["query one,query two"]    # start (or resume) watching a topic; history kept
 #   bash "$TRACKER" drop "<topic>"                              # stop watching a topic; history and dismissals kept
@@ -157,6 +158,53 @@ finally:
 print(json.dumps({"action": "dropped", "topic": topic, "history_kept": n, "note": "say 'track <topic>' to resume with history intact"}))
 PYEOF
     )
+    ;;
+
+  alerts-check)
+    hours="${1:-24}"; mode="${2:-}"
+    [ "$hours" = "--cron" ] && { mode="--cron"; hours=24; }
+    epy "$L30D/watchlist.py" run-all >/dev/null 2>&1 || true
+    ( cd "$L30D" && epy - "$hours" <<'PYEOF'
+import json, sys, datetime, store
+hours = int(sys.argv[1])
+now = datetime.datetime.now(datetime.timezone.utc)
+cutoff = (now - datetime.timedelta(hours=hours)).strftime("%Y-%m-%d %H:%M:%S")
+base_cut = (now - datetime.timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
+conn = store._connect()
+alerts = []
+try:
+    topics = [t for t in store.list_topics() if t.get("enabled")]
+    for t in topics:
+        rows = conn.execute(
+            "SELECT engagement_score FROM findings WHERE topic_id=? AND first_seen>=? AND dismissed=0",
+            (t["id"], base_cut)).fetchall()
+        hist = sorted(float(r[0] or 0) for r in rows)
+        p90 = hist[int(0.9 * (len(hist) - 1))] if len(hist) >= 10 else 0
+        threshold = max(100.0, 3.0 * p90)
+        fresh = conn.execute(
+            """SELECT id, source, source_url, source_title, author, content, engagement_score, first_seen
+               FROM findings WHERE topic_id=? AND first_seen>=? AND dismissed=0
+               ORDER BY engagement_score DESC LIMIT 5""", (t["id"], cutoff)).fetchall()
+        for r in fresh[:2]:
+            if float(r[6] or 0) >= threshold:
+                alerts.append({
+                    "topic": t["name"], "id": r[0], "source": r[1], "url": r[2],
+                    "title": (r[3] or "")[:140], "author": r[4] or None,
+                    "engagement": round(float(r[6] or 0)), "threshold": round(threshold),
+                    "snippet": " ".join((r[5] or "").split())[:200],
+                })
+finally:
+    conn.close()
+print(json.dumps({"checked_hours": hours, "alerts": alerts}, ensure_ascii=False))
+PYEOF
+    ) | { if [ "$mode" = "--cron" ]; then
+        "$PY" -c '
+import json, sys
+line = sys.stdin.read().strip()
+print(line)
+d = json.loads(line or "{}")
+print(json.dumps({"wakeAgent": bool(d.get("alerts"))}))'
+      else cat; fi; }
     ;;
 
   retune)
@@ -674,5 +722,5 @@ PYEOF
     esac
     ;;
 
-  *) echo "usage: tracker watchlist|briefing|research|track|drop|retune|dismiss|history|ingest|podcast-link|set-key|check-key|sync-header|header-state|set-x-bearer|check-x-bearer|x-pull|set-x-key|check-x-key|onboarding|timezone|config-set|reset ..."; exit 2 ;;
+  *) echo "usage: tracker watchlist|briefing|research|track|drop|retune|dismiss|history|ingest|podcast-link|set-key|check-key|sync-header|header-state|set-x-bearer|check-x-bearer|x-pull|set-x-key|check-x-key|alerts-check|onboarding|timezone|config-set|reset ..."; exit 2 ;;
 esac

@@ -39,6 +39,15 @@ Before you post, check every line against these five. If a line fails, fix it or
 4. **One line per story, stories not links.** Two to four per topic with news, one if that is all, never padding. Under 250 words.
 5. **The reader knows the run completed.** End with `Quiet: …` for any topic with nothing new. If nothing is new anywhere, the whole brief is one line: `**Tracker · Thu 28 Aug** — quiet day. Nothing new on <topics>.` No intro, no outro, no "here is your brief", nothing about jobs or reminders.
 
+## Alert mode (when a pre-check woke you)
+
+If the prompt contains pre-check output (`{"checked_hours": ..., "alerts": [...]}`), you are not writing the daily brief; you are deciding whether ONE thing deserves to interrupt someone's day.
+
+1. For each candidate, run the history checks (section 3b): a recurring story, or one whose cluster was dismissed, is not an alert, whatever its engagement.
+2. If one survives: post one line, nothing else: `⚡ **<Topic>** — <what happened, one line> ([Source](url))`. Two candidates on different topics may make two lines; never more.
+3. If nothing survives, reply with exactly `[SILENT]` (nothing else); the run posts nothing.
+4. Never pad an alert into a brief. The history check stops the same story alerting twice; do not dismiss a good story after alerting.
+
 ## Paths
 
 Every shell step goes through one fixed entry point. Set this variable first in each terminal call and call it exactly like this (do not substitute a Python interpreter yourself; the wrapper picks one):

@@ -4,7 +4,9 @@
       "id": "news-tracker-daily",
       "name": "Tracker: daily brief",
       "prompt": "Produce today's tracker brief by following the daily-brief skill exactly. Your final message is posted to the room as-is, so output only the brief.",
-      "skills": ["daily-brief"],
+      "skills": [
+        "daily-brief"
+      ],
       "skill": "daily-brief",
       "model": null,
       "provider": null,
@@ -12,9 +14,55 @@
       "script": null,
       "no_agent": false,
       "context_from": null,
-      "schedule": {"kind": "cron", "expr": "0 8 * * 2-5", "display": "0 8 * * 2-5"},
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 8 * * 2-5",
+        "display": "0 8 * * 2-5"
+      },
       "schedule_display": "0 8 * * 2-5",
-      "repeat": {"times": null, "completed": 0},
+      "repeat": {
+        "times": null,
+        "completed": 0
+      },
+      "enabled": false,
+      "state": "paused",
+      "paused_at": null,
+      "paused_reason": "Optional: the default cadence is weekly + alerts. Resume this only if the person asks for a daily brief.",
+      "created_at": "2026-08-27T00:00:00Z",
+      "next_run_at": null,
+      "last_run_at": null,
+      "last_status": null,
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "filament-fcm",
+      "origin": null,
+      "enabled_toolsets": null,
+      "workdir": null
+    },
+    {
+      "id": "news-tracker-weekly",
+      "name": "Tracker: weekly digest",
+      "prompt": "Produce the weekly tracker digest by following the weekly-digest skill exactly. Your final message is posted to the room as-is, so output only the digest.",
+      "skills": [
+        "weekly-digest"
+      ],
+      "skill": "weekly-digest",
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 8 * * 1",
+        "display": "0 8 * * 1"
+      },
+      "schedule_display": "0 8 * * 1",
+      "repeat": {
+        "times": null,
+        "completed": 0
+      },
       "enabled": false,
       "state": "paused",
       "paused_at": null,
@@ -31,20 +79,29 @@
       "workdir": null
     },
     {
-      "id": "news-tracker-weekly",
-      "name": "Tracker: weekly digest",
-      "prompt": "Produce the weekly tracker digest by following the weekly-digest skill exactly. Your final message is posted to the room as-is, so output only the digest.",
-      "skills": ["weekly-digest"],
-      "skill": "weekly-digest",
+      "id": "news-tracker-alerts",
+      "name": "Tracker: break-in alerts",
+      "prompt": "The pre-check found findings that beat their topic's alert threshold (its output is above). Follow the daily-brief skill's rules to verify each against history (recurring or previously dismissed stories are not alerts) and post ONE short alert: '\\u26a1 **<Topic>** \\u2014 <what happened, one line> ([Source](url))'. At most two lines total. If nothing survives the history check, reply with exactly [SILENT].",
+      "skills": [
+        "daily-brief"
+      ],
+      "skill": "daily-brief",
       "model": null,
       "provider": null,
       "base_url": null,
-      "script": null,
+      "script": "news-tracker-alerts.sh",
       "no_agent": false,
       "context_from": null,
-      "schedule": {"kind": "cron", "expr": "0 8 * * 1", "display": "0 8 * * 1"},
-      "schedule_display": "0 8 * * 1",
-      "repeat": {"times": null, "completed": 0},
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 9,13,17 * * 1-5",
+        "display": "0 9,13,17 * * 1-5"
+      },
+      "schedule_display": "0 9,13,17 * * 1-5",
+      "repeat": {
+        "times": null,
+        "completed": 0
+      },
       "enabled": false,
       "state": "paused",
       "paused_at": null,

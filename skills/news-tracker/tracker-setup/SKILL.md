@@ -105,7 +105,7 @@ The tracker must be live the moment one topic is confirmed, so this runs straigh
 
 **Timezone first, as a statement to confirm, not a question about preferences.** Hosted agents run on UTC, so "8am" would land at 4am in New York unless the zone is set. Make your best guess from anything you know (their city, the room, an earlier mention, the hour they're messaging you), then say:
 
-> You're on. I'll post a short brief here weekday mornings at 8, New York time, and a Monday roundup. Say "change the time", "add X", "drop X" or "pause" whenever you like. (If New York isn't your time zone, tell me where you are.)
+> You're on. I'll post a roundup every Monday at 8, New York time, and I'll break in during the week only when something genuinely big happens on your topics. Say "make it daily", "change the time", "add X", "drop X" or "pause" whenever you like. (If New York isn't your time zone, tell me where you are.)
 
 Set it before resuming, using the IANA name for your guess (`America/New_York`, `Europe/London`, `Asia/Tokyo`):
 
@@ -115,14 +115,16 @@ bash "$TRACKER" timezone America/New_York
 
 If they correct you, set the new zone the same way, then pause and resume both jobs so the next run is recomputed. If you truly have no idea where they are, the line becomes "…weekday mornings at 8. Which city are you in, so I get the time right?" That is the one question this task may ask.
 
-Then switch on:
+Then switch on the default cadence, weekly roundup plus break-in alerts:
 
-- `cronjob(action="resume", job_id="news-tracker-daily")`
 - `cronjob(action="resume", job_id="news-tracker-weekly")`
+- `cronjob(action="resume", job_id="news-tracker-alerts")`
+
+(`news-tracker-daily` stays paused; it is the opt-in for people who ask for a daily brief.)
 
 If they mentioned a different time or fewer days, apply it first with `cronjob(action="update", job_id="news-tracker-daily", schedule="<cron expr>")` and say the new time back.
 
-Save a memory note: "News tracker configured <date>. Topics: <topic> (watching for: ...). Daily Tue–Fri 08:00, weekly Mon 08:00." Then `bash "$TRACKER" onboarding done routines_on`.
+Save a memory note: "News tracker configured <date>. Topics: <topic> (watching for: ...). Weekly Mon 08:00 + break-in alerts." Then `bash "$TRACKER" onboarding done routines_on`.
 
 Finish the reply with: "Want me to watch anything else? It's already running with what you've given me." Read the answer:
 

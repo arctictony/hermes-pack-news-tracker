@@ -64,6 +64,10 @@ Every reply to a brief is calibration: "less of that", "why is this here", "more
 
 Calibration is per topic. What was agreed for one topic never applies to another; memory notes name their topic.
 
+## "Make it daily" / "weekly is enough"
+
+Daily: `cronjob(action="resume", job_id="news-tracker-daily")`; say the schedule back. Weekly-only again: pause it. The alerts job stays on either way unless they say "no alerts".
+
 ## "Track X" / "drop X" / "pause" / "change the time" / "connect podcasts" / "start over"
 
 → the `tracker-setup` skill. Dropping keeps history; never use `watchlist remove`.

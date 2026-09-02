@@ -34,7 +34,7 @@ The pack never ships a key (the repo is public; each agent needs its own). Inste
 - **Onboarding** — `tracker-setup`: a five-task checklist with state (`tracker onboarding`), worked through at conversational pauses: first topic (show five, react), routines on (immediately), podcasts (Particle key walk-through), X coverage (xAI key walk-through), room-ready. Tasks can be done, declined or snoozed; the agent picks up the next one whenever a conversation reaches a natural end
 - **Skill** — `last30days` (vendored, v3.8.3): research across Reddit, HN, YouTube, X, Polymarket, Digg and the web, with a SQLite store so "new since last time" is real
 - **Connector** — Particle.pro MCP (`https://mcp.particle.pro`) for the podcast lane
-- **Routines** — `news-tracker-daily` (Tue–Fri 08:00) and `news-tracker-weekly` (Mon 08:00), delivered to the agent's Filament home room. Shipped paused; setup enables them
+- **Routines** — default cadence is `news-tracker-weekly` (Mon 08:00) plus `news-tracker-alerts`: a scripted pre-check (Mon–Fri 9/13/17) that researches every topic and wakes the agent only when a new finding clears max(100, 3× the topic's 30-day p90) engagement; quiet checks cost no tokens and post nothing (`wakeAgent: false`). `news-tracker-daily` ships paused as the opt-in. Delivered to the agent's Filament home room; setup enables weekly + alerts
 
 ## Two install paths, same files
 
